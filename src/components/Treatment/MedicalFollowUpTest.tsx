@@ -1,6 +1,6 @@
 import React from 'react';
 import { MedicalFollowUp } from './MedicalFollowUp';
-import { TreatmentType } from '../../types/medical';
+import { TreatmentType, TreatmentStatus } from '../../types/medical';
 
 export const MedicalFollowUpTest: React.FC = () => {
   const testTreatments = [
@@ -8,49 +8,70 @@ export const MedicalFollowUpTest: React.FC = () => {
       id: 1,
       petId: 1,
       type: TreatmentType.VACCINATION,
-      name: "Vaccination contre la rage",
+      name: "PrimoVaccin",
       date: new Date(),
-      nextDueDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+      nextDueDate: new Date("2025-02-15"),
       notes: "Première vaccination",
       veterinarianId: 1,
-      createdAt: new Date(),
-      updatedAt: new Date(),
       disease: "Rage",
-      batch: "LOT123456",
-      manufacturer: "VetoPharma"
+      batch: "LOT123",
+      manufacturer: "VetoPharma",
+      status: TreatmentStatus.PENDING,
+      createdAt: new Date(),
+      updatedAt: new Date()
     },
     {
       id: 2,
       petId: 1,
-      type: TreatmentType.CHECKUP,
-      name: "Consultation de routine",
+      type: TreatmentType.DEWORMING,
+      name: "Ody kankana",
       date: new Date(),
-      notes: "Bilan annuel",
+      nextDueDate: new Date("2025-02-13"),
+      notes: "Vermifuge trimestriel",
       veterinarianId: 1,
+      product: "Milbemax",
+      weight: 4.5,
+      dosage: "1 comprimé",
+      status: TreatmentStatus.PENDING,
       createdAt: new Date(),
-      updatedAt: new Date(),
-      reason: "Bilan annuel",
-      diagnosis: "RAS",
-      prescription: "Continuer les vermifuges",
-      weight: 12.5,
-      temperature: 38.5
+      updatedAt: new Date()
     },
     {
       id: 3,
       petId: 1,
+      type: TreatmentType.CHECKUP,
+      name: "Visite de contrôle",
+      date: new Date(),
+      nextDueDate: new Date("2024-03-15"),
+      notes: "Contrôle annuel",
+      veterinarianId: 1,
+      reason: "Contrôle annuel",
+      diagnosis: "RAS",
+      prescription: "Aucune",
+      weight: 4.5,
+      temperature: 38.5,
+      status: TreatmentStatus.PENDING,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    },
+    {
+      id: 4,
+      petId: 1,
       type: TreatmentType.MEDICATION,
       name: "Antibiotiques",
       date: new Date(),
+      nextDueDate: new Date("2024-02-20"),
       notes: "Traitement infection",
       veterinarianId: 1,
-      createdAt: new Date(),
-      updatedAt: new Date(),
       product: "Amoxicilline",
-      dosage: "1 comprimé matin et soir",
-      frequency: "2 fois par jour",
-      duration: 7,
+      dosage: "1cp 2x/jour",
+      frequency: "12h",
+      duration: 10,
       startDate: new Date(),
-      endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+      endDate: new Date("2024-02-20"),
+      status: TreatmentStatus.PENDING,
+      createdAt: new Date(),
+      updatedAt: new Date()
     }
   ];
 

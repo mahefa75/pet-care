@@ -21,7 +21,9 @@ export const TreatmentHistory: React.FC<TreatmentHistoryProps> = ({
   const [filters, setFilters] = useState<TreatmentFilters>({
     petId,
     page: 1,
-    limit: 10
+    limit: 10,
+    sortBy: 'date',
+    sortOrder: 'desc'
   });
 
   useEffect(() => {

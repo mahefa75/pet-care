@@ -70,4 +70,17 @@ export class WeightService {
 
     return previousMeasurements[0];
   }
+
+  async updateWeight(measurement: WeightMeasurement): Promise<void> {
+    const roundedWeight = Math.round(measurement.weight * 1000) / 1000;
+    await db.weightMeasurements.update(measurement.id, {
+      ...measurement,
+      weight: roundedWeight,
+      date: new Date(measurement.date)
+    });
+  }
+
+  async deleteWeight(id: number): Promise<void> {
+    await db.weightMeasurements.delete(id);
+  }
 } 

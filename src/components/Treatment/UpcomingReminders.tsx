@@ -1,180 +1,184 @@
 import React, { useState, useEffect } from 'react';
-import { Reminder, TreatmentType } from '../../types/medical';
-import { TreatmentService } from '../../services/treatment.service';
-import { format, isPast, isToday } from 'date-fns';
+import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { TreatmentService } from '../../services/treatment.service';
+import { Treatment, TreatmentType, TreatmentStatus } from '../../types/medical';
+import { CheckCircleIcon, XCircleIcon, BeakerIcon, ClipboardDocumentCheckIcon } from '@heroicons/react/24/outline';
 
 interface UpcomingRemindersProps {
-  petId?: number;
-  days?: number;
-  onReminderComplete?: (id: number) => void;
-  onReminderCancel?: (id: number) => void;
+  petId: number;
+  onReminderComplete?: () => void;
+  onReminderCancel?: () => void;
+  onHasReminders?: (hasReminders: boolean) => void;
 }
-
-const treatmentService = new TreatmentService();
 
 export const UpcomingReminders: React.FC<UpcomingRemindersProps> = ({
   petId,
-  days = 30,
   onReminderComplete,
-  onReminderCancel
+  onReminderCancel,
+  onHasReminders,
 }) => {
-  const [reminders, setReminders] = useState<Reminder[]>([]);
+  const [reminders, setReminders] = useState<Treatment[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const treatmentService = new TreatmentService();
 
   useEffect(() => {
+    console.log('UpcomingReminders - Loading reminders for pet:', petId);
     loadReminders();
-  }, [petId, days]);
+  }, [petId]);
+
+  useEffect(() => {
+    if (!loading) {
+      const upcomingReminders = reminders.filter(r => {
+        const hasNextDueDate = Boolean(r.nextDueDate);
+        console.log('Reminder:', {
+          id: r.id,
+          name: r.name,
+          type: r.type,
+          nextDueDate: r.nextDueDate,
+          hasNextDueDate
+        });
+        return hasNextDueDate;
+      });
+      console.log('Filtered reminders:', upcomingReminders.length);
+      onHasReminders?.(upcomingReminders.length > 0);
+    }
+  }, [reminders, loading, onHasReminders]);
 
   const loadReminders = async () => {
     try {
       setLoading(true);
-      let data: Reminder[];
-      if (petId) {
-        data = await treatmentService.getReminders(petId, 'PENDING');
-      } else {
-        data = await treatmentService.getUpcomingReminders(days);
-      }
-      setReminders(data);
-      setError(null);
-    } catch (err) {
-      setError('Erreur lors du chargement des rappels');
-      console.error(err);
+      console.log('Fetching treatments for pet:', petId);
+      const data = await treatmentService.getTreatments({ 
+        petId, 
+        status: TreatmentStatus.PENDING,
+        sortBy: 'nextDueDate',
+        sortOrder: 'asc',
+        page: 1,
+        limit: 50
+      });
+      console.log('Raw treatments data:', data);
+
+      const upcomingTreatments = data.filter(treatment => {
+        if (!treatment.nextDueDate) {
+          console.log('Treatment without nextDueDate:', treatment);
+          return false;
+        }
+        const nextDueDate = new Date(treatment.nextDueDate);
+        const isUpcoming = nextDueDate >= new Date();
+        console.log('Treatment date check:', {
+          id: treatment.id,
+          name: treatment.name,
+          nextDueDate,
+          isUpcoming
+        });
+        return isUpcoming;
+      });
+
+      console.log('Filtered upcoming treatments:', upcomingTreatments);
+      setReminders(upcomingTreatments);
+    } catch (error) {
+      console.error('Erreur lors du chargement des rappels:', error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleComplete = async (id: number) => {
-    try {
-      await treatmentService.updateReminderStatus(id, 'COMPLETED');
-      if (onReminderComplete) {
-        onReminderComplete(id);
-      }
-      await loadReminders();
-    } catch (err) {
-      setError('Erreur lors de la mise à jour du rappel');
-      console.error(err);
-    }
-  };
-
-  const handleCancel = async (id: number) => {
-    try {
-      await treatmentService.updateReminderStatus(id, 'CANCELLED');
-      if (onReminderCancel) {
-        onReminderCancel(id);
-      }
-      await loadReminders();
-    } catch (err) {
-      setError('Erreur lors de l\'annulation du rappel');
-      console.error(err);
     }
   };
 
   const getTreatmentIcon = (type: TreatmentType) => {
     switch (type) {
       case TreatmentType.VACCINATION:
-        return '💉';
+        return <BeakerIcon className="h-5 w-5 text-blue-500" />;
       case TreatmentType.DEWORMING:
-        return '🪱';
+        return <ClipboardDocumentCheckIcon className="h-5 w-5 text-purple-500" />;
       case TreatmentType.MEDICATION:
-        return '💊';
+        return <BeakerIcon className="h-5 w-5 text-green-500" />;
       case TreatmentType.CHECKUP:
-        return '👨‍⚕️';
       case TreatmentType.SURGERY:
-        return '🏥';
+        return <ClipboardDocumentCheckIcon className="h-5 w-5 text-orange-500" />;
       default:
-        return '📋';
+        return <ClipboardDocumentCheckIcon className="h-5 w-5 text-gray-500" />;
     }
   };
 
-  const getReminderStatus = (dueDate: Date) => {
-    if (isPast(new Date(dueDate)) && !isToday(new Date(dueDate))) {
-      return {
-        color: 'text-red-600',
-        text: 'En retard'
-      };
+  const handleComplete = async (treatmentId: number) => {
+    try {
+      await treatmentService.updateTreatment(treatmentId, { status: TreatmentStatus.COMPLETED });
+      onReminderComplete?.();
+      await loadReminders();
+    } catch (error) {
+      console.error('Erreur lors de la complétion du traitement:', error);
     }
-    if (isToday(new Date(dueDate))) {
-      return {
-        color: 'text-orange-600',
-        text: 'Aujourd\'hui'
-      };
+  };
+
+  const handleCancel = async (treatmentId: number) => {
+    try {
+      await treatmentService.updateTreatment(treatmentId, { status: TreatmentStatus.CANCELLED });
+      onReminderCancel?.();
+      await loadReminders();
+    } catch (error) {
+      console.error('Erreur lors de l\'annulation du traitement:', error);
     }
-    return {
-      color: 'text-green-600',
-      text: 'À venir'
-    };
   };
 
   if (loading) {
-    return (
-      <div className="flex justify-center items-center h-32">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-      </div>
-    );
+    return null;
   }
 
-  if (error) {
-    return (
-      <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative">
-        {error}
-      </div>
-    );
+  if (reminders.length === 0) {
+    return null;
   }
 
   return (
-    <div className="space-y-4">
-      <h3 className="text-lg font-semibold text-gray-900">Rappels à venir</h3>
-
-      {reminders.length === 0 ? (
-        <p className="text-center text-gray-500 py-8">Aucun rappel prévu</p>
-      ) : (
-        <div className="space-y-4">
-          {reminders.map((reminder) => {
-            const status = getReminderStatus(reminder.dueDate);
-            return (
-              <div
-                key={reminder.id}
-                className="bg-white rounded-lg shadow p-4 hover:shadow-md transition-shadow"
-              >
-                <div className="flex items-start gap-3">
-                  <span className="text-2xl" role="img" aria-label={reminder.type}>
-                    {getTreatmentIcon(reminder.type)}
+    <div className="space-y-3">
+      {reminders.map((reminder) => {
+        console.log('Rendering reminder:', {
+          id: reminder.id,
+          name: reminder.name,
+          type: reminder.type,
+          nextDueDate: reminder.nextDueDate
+        });
+        return (
+          <div
+            key={reminder.id}
+            className="flex items-start gap-3 p-2 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors"
+          >
+            <div className="flex-shrink-0 mt-1">
+              {getTreatmentIcon(reminder.type)}
+            </div>
+            <div className="flex-grow min-w-0">
+              <div className="flex flex-col">
+                <span className="font-medium text-sm text-gray-900">
+                  {reminder.name}
+                </span>
+                <span className="text-xs text-gray-500">
+                  {reminder.type}
+                </span>
+                {reminder.nextDueDate && (
+                  <span className="text-xs text-blue-600 mt-1">
+                    Prochain rendez-vous : {format(new Date(reminder.nextDueDate), 'd MMMM yyyy', { locale: fr })}
                   </span>
-                  <div className="flex-1">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <p className="text-sm text-gray-500">{reminder.type}</p>
-                        <p className={`text-sm font-medium ${status.color}`}>
-                          {status.text} - {format(new Date(reminder.dueDate), 'dd MMMM yyyy', { locale: fr })}
-                        </p>
-                      </div>
-                      <div className="flex space-x-2">
-                        <button
-                          onClick={() => handleComplete(reminder.id)}
-                          className="px-2 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700 
-                                   transition-colors focus:outline-none focus:ring-2 focus:ring-green-500"
-                        >
-                          Fait
-                        </button>
-                        <button
-                          onClick={() => handleCancel(reminder.id)}
-                          className="px-2 py-1 text-sm bg-red-600 text-white rounded hover:bg-red-700 
-                                   transition-colors focus:outline-none focus:ring-2 focus:ring-red-500"
-                        >
-                          Annuler
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                )}
               </div>
-            );
-          })}
-        </div>
-      )}
+            </div>
+            <div className="flex-shrink-0 flex gap-1">
+              <button
+                onClick={() => handleComplete(reminder.id)}
+                className="p-1 text-green-600 hover:text-green-800 transition-colors"
+                title="Marquer comme fait"
+              >
+                <CheckCircleIcon className="h-5 w-5" />
+              </button>
+              <button
+                onClick={() => handleCancel(reminder.id)}
+                className="p-1 text-red-600 hover:text-red-800 transition-colors"
+                title="Annuler"
+              >
+                <XCircleIcon className="h-5 w-5" />
+              </button>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }; 

@@ -14,6 +14,7 @@
     "@types/react-router-dom": "^5.3.3",
     "@vlcn.io/crsqlite-wasm": "^0.16.0",
     "chart.js": "^4.4.7",
+    "chartjs-adapter-date-fns": "^3.0.0",
     "date-fns": "^3.6.0",
     "dexie": "^4.0.11",
     "lucide-react": "^0.344.0",

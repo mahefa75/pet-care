@@ -5,6 +5,7 @@ import { WeightService } from '../services/weight.service';
 import { PetMedicalDetails } from '../components/Pet/PetMedicalDetails';
 import { WeightChart } from '../components/Pet/WeightChart';
 import { AddWeightForm } from '../components/Pet/AddWeightForm';
+import { WeightList } from '../components/Weight/WeightList';
 import { Pet, WeightMeasurement } from '../types/pet';
 
 const petService = new PetService();
@@ -113,6 +114,10 @@ export const PetDetailsPage: React.FC = () => {
                   onWeightAdded={() => loadWeightHistory(parseInt(id!))} 
                 />
               </div>
+              <WeightList 
+                weights={weightHistory} 
+                onWeightUpdated={() => loadWeightHistory(parseInt(id!))} 
+              />
             </div>
           </div>
         </div>

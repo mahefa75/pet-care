@@ -1,10 +1,16 @@
 export enum TreatmentType {
   VACCINATION = 'VACCINATION',
-  DEWORMING = 'VERMIFUGE',
+  DEWORMING = 'DEWORMING',
   MEDICATION = 'MEDICATION',
-  CHECKUP = 'CONSULTATION',
-  SURGERY = 'CHIRURGIE',
-  OTHER = 'AUTRE'
+  CHECKUP = 'CHECKUP',
+  SURGERY = 'SURGERY',
+  OTHER = 'OTHER'
+}
+
+export enum TreatmentStatus {
+  PENDING = 'PENDING',
+  COMPLETED = 'COMPLETED',
+  CANCELLED = 'CANCELLED'
 }
 
 export interface Treatment {
@@ -16,6 +22,7 @@ export interface Treatment {
   nextDueDate?: Date;
   notes?: string;
   veterinarianId: number;
+  status: TreatmentStatus;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -75,9 +82,12 @@ export interface Reminder {
 export interface TreatmentFilters {
   petId?: number;
   type?: TreatmentType;
+  status?: TreatmentStatus;
   startDate?: Date;
   endDate?: Date;
-  includeCompleted?: boolean;
+  sortBy?: keyof Treatment;
+  sortOrder?: 'asc' | 'desc';
   page: number;
   limit: number;
+  offset?: number;
 } 

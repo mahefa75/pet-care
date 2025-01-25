@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import { PetsPage } from './pages/PetsPage';
 import { PetDetailsPage } from './pages/PetDetailsPage';
+import { DashboardPage } from './pages/DashboardPage';
 
 const App: React.FC = () => {
   return (
@@ -22,6 +23,13 @@ const App: React.FC = () => {
                   >
                     Animaux
                   </Link>
+                  <Link
+                    to="/dashboard"
+                    className="text-gray-900 inline-flex items-center px-1 pt-1 
+                             border-b-2 border-transparent hover:border-gray-300 text-sm font-medium"
+                  >
+                    Tableau de bord
+                  </Link>
                 </div>
               </div>
             </div>
@@ -32,6 +40,7 @@ const App: React.FC = () => {
           <Routes>
             <Route path="/" element={<PetsPage />} />
             <Route path="/pet/:id" element={<PetDetailsPage />} />
+            <Route path="/dashboard" element={<DashboardPage />} />
           </Routes>
         </main>
       </div>

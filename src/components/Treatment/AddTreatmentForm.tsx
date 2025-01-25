@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { TreatmentType } from '../../types/medical';
+import { TreatmentType, TreatmentStatus } from '../../types/medical';
 import { TreatmentService } from '../../services/treatment.service';
 
 interface AddTreatmentFormProps {
@@ -57,7 +57,8 @@ export const AddTreatmentForm: React.FC<AddTreatmentFormProps> = ({
         date: new Date(date),
         nextDueDate: nextDueDate ? new Date(nextDueDate) : undefined,
         notes,
-        veterinarianId
+        veterinarianId,
+        status: TreatmentStatus.PENDING,
       };
 
       switch (type) {
@@ -67,7 +68,8 @@ export const AddTreatmentForm: React.FC<AddTreatmentFormProps> = ({
             type: TreatmentType.VACCINATION,
             disease,
             batch,
-            manufacturer
+            manufacturer,
+            status: TreatmentStatus.PENDING,
           });
           break;
 
