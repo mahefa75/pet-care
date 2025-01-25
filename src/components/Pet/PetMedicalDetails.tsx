@@ -2,9 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { TreatmentHistory } from '../Treatment/TreatmentHistory';
 import { UpcomingReminders } from '../Treatment/UpcomingReminders';
 import { AddTreatmentModal } from '../Treatment/AddTreatmentModal';
-import { MedicalFollowUp } from '../Treatment/MedicalFollowUp';
 import { TreatmentService } from '../../services/treatment.service';
-import { Treatment } from '../../types/medical';
 
 interface PetMedicalDetailsProps {
   petId: number;
@@ -16,7 +14,6 @@ export const PetMedicalDetails: React.FC<PetMedicalDetailsProps> = ({
   petId
 }) => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [treatments, setTreatments] = useState<Treatment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -27,12 +24,11 @@ export const PetMedicalDetails: React.FC<PetMedicalDetailsProps> = ({
   const loadTreatments = async () => {
     try {
       setLoading(true);
-      const data = await treatmentService.getTreatments({
+      await treatmentService.getTreatments({
         petId,
         page: 1,
         limit: 50
       });
-      setTreatments(data);
       setError(null);
     } catch (err) {
       setError('Erreur lors du chargement des traitements');
@@ -91,15 +87,7 @@ export const PetMedicalDetails: React.FC<PetMedicalDetailsProps> = ({
           </button>
         </div>
 
-        {treatments.length === 0 ? (
-          <p className="text-center text-gray-500 py-8">Aucun traitement enregistré</p>
-        ) : (
-          <div className="space-y-4">
-            {treatments.map(treatment => (
-              <MedicalFollowUp key={treatment.id} treatment={treatment} />
-            ))}
-          </div>
-        )}
+        <TreatmentHistory petId={petId} />
       </div>
 
       {/* Modal d'ajout de traitement */}

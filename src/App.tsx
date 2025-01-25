@@ -1,7 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import { PetsPage } from './pages/PetsPage';
-import { MedicalFollowUpTest } from './components/Treatment/MedicalFollowUpTest';
 import { PetDetailsPage } from './pages/PetDetailsPage';
 
 const App: React.FC = () => {
@@ -23,13 +22,6 @@ const App: React.FC = () => {
                   >
                     Animaux
                   </Link>
-                  <Link
-                    to="/test-medical"
-                    className="text-gray-900 inline-flex items-center px-1 pt-1 
-                             border-b-2 border-transparent hover:border-gray-300 text-sm font-medium"
-                  >
-                    Test Suivi Médical
-                  </Link>
                 </div>
               </div>
             </div>
@@ -39,7 +31,6 @@ const App: React.FC = () => {
         <main>
           <Routes>
             <Route path="/" element={<PetsPage />} />
-            <Route path="/test-medical" element={<MedicalFollowUpTest />} />
             <Route path="/pet/:id" element={<PetDetailsPage />} />
           </Routes>
         </main>

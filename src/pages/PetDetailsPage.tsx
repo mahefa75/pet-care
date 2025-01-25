@@ -1,20 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { PetService } from '../services/pet.service';
+import { WeightService } from '../services/weight.service';
 import { PetMedicalDetails } from '../components/Pet/PetMedicalDetails';
-import { Pet } from '../types/pet';
+import { WeightChart } from '../components/Pet/WeightChart';
+import { AddWeightForm } from '../components/Pet/AddWeightForm';
+import { Pet, WeightMeasurement } from '../types/pet';
 
 const petService = new PetService();
+const weightService = new WeightService();
 
 export const PetDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [pet, setPet] = useState<Pet | null>(null);
+  const [weightHistory, setWeightHistory] = useState<WeightMeasurement[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (id) {
       loadPet(parseInt(id));
+      loadWeightHistory(parseInt(id));
     }
   }, [id]);
 
@@ -29,6 +35,15 @@ export const PetDetailsPage: React.FC = () => {
       console.error(err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadWeightHistory = async (petId: number) => {
+    try {
+      const history = await weightService.getWeightHistory(petId);
+      setWeightHistory(history);
+    } catch (error) {
+      console.error('Erreur lors du chargement de l\'historique du poids:', error);
     }
   };
 
@@ -84,6 +99,21 @@ export const PetDetailsPage: React.FC = () => {
                 </dd>
               </div>
             </dl>
+          </div>
+
+          {/* Graphique d'évolution du poids */}
+          <div className="mt-8 space-y-6">
+            <div className="bg-white rounded-lg shadow-sm p-6">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">Suivi du poids</h2>
+              <WeightChart weightHistory={weightHistory} />
+              <div className="mt-6">
+                <h3 className="text-lg font-medium text-gray-900 mb-4">Ajouter une mesure</h3>
+                <AddWeightForm 
+                  petId={parseInt(id!)} 
+                  onWeightAdded={() => loadWeightHistory(parseInt(id!))} 
+                />
+              </div>
+            </div>
           </div>
         </div>
 

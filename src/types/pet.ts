@@ -11,6 +11,14 @@ export enum PetStatus {
   TREATMENT = 'TREATMENT'
 }
 
+export interface WeightMeasurement {
+  id: number;
+  petId: number;
+  weight: number;
+  date: Date;
+  notes?: string;
+}
+
 export interface Pet {
   id: number;
   name: string;
@@ -22,6 +30,7 @@ export interface Pet {
   ownerId: number;
   createdAt: Date;
   updatedAt: Date;
+  weightHistory?: WeightMeasurement[];
 }
 
 export interface PetFilters {

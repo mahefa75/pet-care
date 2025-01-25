@@ -1,7 +1,9 @@
-import React from 'react';
-import { Pet, PetStatus } from '../../types/pet';
+import React, { useState, useEffect } from 'react';
+import { Pet, PetStatus, WeightMeasurement } from '../../types/pet';
 import { differenceInYears, differenceInMonths, differenceInDays } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
+import { WeightService } from '../../services/weight.service';
+import { ArrowUpIcon, ArrowDownIcon, MinusIcon } from '@heroicons/react/24/solid';
 
 interface PetCardProps {
   pet: Pet;
@@ -10,6 +12,8 @@ interface PetCardProps {
   variant?: 'compact' | 'detailed';
 }
 
+const weightService = new WeightService();
+
 export const PetCard: React.FC<PetCardProps> = ({ 
   pet, 
   onEdit, 
@@ -17,6 +21,54 @@ export const PetCard: React.FC<PetCardProps> = ({
   variant = 'detailed' 
 }) => {
   const navigate = useNavigate();
+  const [weightTrend, setWeightTrend] = useState<'up' | 'down' | 'stable' | null>(null);
+  const [latestWeight, setLatestWeight] = useState<WeightMeasurement | null>(null);
+  const [previousWeight, setPreviousWeight] = useState<WeightMeasurement | null>(null);
+
+  useEffect(() => {
+    loadWeightTrend();
+  }, [pet.id]);
+
+  const loadWeightTrend = async () => {
+    try {
+      const latest = await weightService.getLatestWeight(pet.id);
+      if (latest) {
+        setLatestWeight(latest);
+        const previous = await weightService.getPreviousWeight(pet.id, latest.date);
+        if (previous) {
+          setPreviousWeight(previous);
+          if (latest.weight > previous.weight) {
+            setWeightTrend('up');
+          } else if (latest.weight < previous.weight) {
+            setWeightTrend('down');
+          } else {
+            setWeightTrend('stable');
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement de la tendance du poids:', error);
+    }
+  };
+
+  const renderWeightTrend = () => {
+    if (!weightTrend || !previousWeight) return null;
+
+    const icons = {
+      up: <ArrowUpIcon className="h-5 w-5 text-green-500" />,
+      down: <ArrowDownIcon className="h-5 w-5 text-red-500" />,
+      stable: <MinusIcon className="h-5 w-5 text-gray-500" />
+    };
+
+    return (
+      <div className="flex items-center space-x-1">
+        {icons[weightTrend]}
+        <span className="text-sm text-gray-500">
+          {previousWeight.weight} kg
+        </span>
+      </div>
+    );
+  };
 
   const getStatusColor = (status: PetStatus) => {
     switch (status) {
@@ -61,6 +113,20 @@ export const PetCard: React.FC<PetCardProps> = ({
     navigate(`/pet/${pet.id}`);
   };
 
+  const renderWeight = () => {
+    if (latestWeight) {
+      return (
+        <div className="flex items-center space-x-2">
+          <p className="text-gray-900">{latestWeight.weight} kg</p>
+          {renderWeightTrend()}
+        </div>
+      );
+    }
+    return (
+      <p className="text-gray-900">{pet.weight} kg</p>
+    );
+  };
+
   if (variant === 'compact') {
     return (
       <div className="bg-white rounded-lg shadow p-4 hover:shadow-md transition-shadow">
@@ -101,7 +167,7 @@ export const PetCard: React.FC<PetCardProps> = ({
         </div>
         <div>
           <p className="text-sm text-gray-500">Poids</p>
-          <p className="text-gray-900">{pet.weight} kg</p>
+          {renderWeight()}
         </div>
       </div>
 
