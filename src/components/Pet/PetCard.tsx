@@ -1,6 +1,7 @@
 import React from 'react';
 import { Pet, PetStatus } from '../../types/pet';
 import { differenceInYears, differenceInMonths, differenceInDays } from 'date-fns';
+import { useNavigate } from 'react-router-dom';
 
 interface PetCardProps {
   pet: Pet;
@@ -15,6 +16,8 @@ export const PetCard: React.FC<PetCardProps> = ({
   onDelete, 
   variant = 'detailed' 
 }) => {
+  const navigate = useNavigate();
+
   const getStatusColor = (status: PetStatus) => {
     switch (status) {
       case PetStatus.HEALTHY:
@@ -52,6 +55,10 @@ export const PetCard: React.FC<PetCardProps> = ({
     }
     
     return `${years} an${years > 1 ? 's' : ''}`;
+  };
+
+  const handleEdit = () => {
+    navigate(`/pet/${pet.id}`);
   };
 
   if (variant === 'compact') {
@@ -102,9 +109,8 @@ export const PetCard: React.FC<PetCardProps> = ({
         <div className="mt-6 flex justify-end space-x-3">
           {onEdit && (
             <button
-              onClick={() => onEdit(pet)}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 
-                       transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+              onClick={handleEdit}
+              className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
               Modifier
             </button>

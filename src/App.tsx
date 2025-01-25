@@ -1,39 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { Pet, MedicalRecord } from './types';
-import { PawPrint, Plus, Calendar, Syringe, Shield, Pill } from 'lucide-react';
-import { format, parseISO, isAfter } from 'date-fns';
-import { fr } from 'date-fns/locale';
-import * as db from './lib/db';
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import { PetsPage } from './pages/PetsPage';
+import { MedicalFollowUpTest } from './components/Treatment/MedicalFollowUpTest';
+import { PetDetailsPage } from './pages/PetDetailsPage';
 
 const App: React.FC = () => {
-  const [pets, setPets] = useState<Pet[]>([]);
-  const [selectedPet, setSelectedPet] = useState<Pet | null>(null);
-  const [medicalRecords, setMedicalRecords] = useState<MedicalRecord[]>([]);
-  const [showAddPet, setShowAddPet] = useState(false);
-  const [showAddRecord, setShowAddRecord] = useState(false);
-
-  useEffect(() => {
-    fetchPets();
-  }, []);
-
-  useEffect(() => {
-    if (selectedPet) {
-      fetchMedicalRecords(selectedPet.id);
-    }
-  }, [selectedPet]);
-
-  const fetchPets = async () => {
-    const fetchedPets = await db.getPets();
-    setPets(fetchedPets);
-  };
-
-  const fetchMedicalRecords = async (petId: string) => {
-    const records = await db.getMedicalRecords(petId);
-    setMedicalRecords(records);
-  };
-
   return (
     <Router>
       <div className="min-h-screen bg-gray-50">
@@ -52,7 +23,13 @@ const App: React.FC = () => {
                   >
                     Animaux
                   </Link>
-                  {/* Autres liens de navigation à ajouter ici */}
+                  <Link
+                    to="/test-medical"
+                    className="text-gray-900 inline-flex items-center px-1 pt-1 
+                             border-b-2 border-transparent hover:border-gray-300 text-sm font-medium"
+                  >
+                    Test Suivi Médical
+                  </Link>
                 </div>
               </div>
             </div>
@@ -62,7 +39,8 @@ const App: React.FC = () => {
         <main>
           <Routes>
             <Route path="/" element={<PetsPage />} />
-            {/* Autres routes à ajouter ici */}
+            <Route path="/test-medical" element={<MedicalFollowUpTest />} />
+            <Route path="/pet/:id" element={<PetDetailsPage />} />
           </Routes>
         </main>
       </div>

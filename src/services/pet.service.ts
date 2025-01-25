@@ -1,4 +1,5 @@
-import { Pet, PetFilters, MedicalRecord } from '../types/pet';
+import { Pet, PetFilters } from '../types/pet';
+import { MedicalRecord } from '../types';
 import { db } from '../lib/db';
 
 export class PetService {
@@ -54,10 +55,19 @@ export class PetService {
   }
 
   async getMedicalHistory(petId: number): Promise<MedicalRecord[]> {
-    return db.medicalRecords
+    const treatments = await db.treatments
       .where('petId')
       .equals(petId)
-      .reverse()
-      .sortBy('date');
+      .toArray();
+
+    return treatments.map(t => ({
+      id: t.id.toString(),
+      pet_id: t.petId.toString(),
+      type: t.type.toLowerCase(),
+      date: t.date.toISOString(),
+      next_due_date: t.nextDueDate?.toISOString() || null,
+      notes: t.notes || null,
+      created_at: t.createdAt.toISOString()
+    }));
   }
 } 
