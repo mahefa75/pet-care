@@ -3,6 +3,8 @@ import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react
 import { PetsPage } from './pages/PetsPage';
 import { PetDetailsPage } from './pages/PetDetailsPage';
 import { DashboardPage } from './pages/DashboardPage';
+import { SettingsPage } from './pages/SettingsPage';
+import { Cog6ToothIcon } from '@heroicons/react/24/outline';
 
 const Navigation: React.FC = () => {
   const location = useLocation();
@@ -32,6 +34,16 @@ const Navigation: React.FC = () => {
               </Link>
             </div>
           </div>
+          <div className="flex items-center">
+            <Link
+              to="/settings"
+              className={`${location.pathname === '/settings' ? 'text-blue-600' : 'text-gray-600 hover:text-gray-900'} 
+                       inline-flex items-center px-3 py-2 rounded-md text-sm font-medium`}
+            >
+              <Cog6ToothIcon className="h-5 w-5 mr-1" />
+              Paramètres
+            </Link>
+          </div>
         </div>
       </div>
     </nav>
@@ -48,6 +60,7 @@ const App: React.FC = () => {
             <Route path="/" element={<DashboardPage />} />
             <Route path="/pets" element={<PetsPage />} />
             <Route path="/pet/:id" element={<PetDetailsPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
           </Routes>
         </main>
       </div>
