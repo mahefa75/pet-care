@@ -18,6 +18,7 @@ import { PetService } from '../services/pet.service';
 import { Pet, WeightMeasurement } from '../types/pet';
 import { UpcomingReminders } from '../components/Treatment/UpcomingReminders';
 import { CalendarIcon } from '@heroicons/react/24/outline';
+import { GroupedFoodRecommendation } from '../components/Pet/FoodRecommendation';
 
 ChartJS.register(
   CategoryScale,
@@ -212,20 +213,27 @@ export const DashboardPage: React.FC = () => {
     <div className="max-w-7xl mx-auto px-4 py-8">
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         {/* Graphique des poids */}
-        <div className="lg:col-span-3 bg-white rounded-lg shadow-sm p-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Suivi des poids</h2>
-          {weightData.size > 0 ? (
-            <div style={{ height: '400px' }}>
-              <Line data={getChartData()} options={options} />
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center h-64 text-gray-500">
-              <svg className="w-12 h-12 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-              </svg>
-              <p>Aucune donnée de poids disponible</p>
-            </div>
-          )}
+        <div className="lg:col-span-3">
+          <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Suivi des poids</h2>
+            {weightData.size > 0 ? (
+              <div style={{ height: '400px' }}>
+                <Line data={getChartData()} options={options} />
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-64 text-gray-500">
+                <svg className="w-12 h-12 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+                <p>Aucune donnée de poids disponible</p>
+              </div>
+            )}
+          </div>
+
+          {/* Recommandations alimentaires */}
+          <div className="bg-white rounded-lg shadow-sm">
+            <GroupedFoodRecommendation pets={pets} />
+          </div>
         </div>
 
         {/* Rappels et traitements à venir */}
@@ -248,7 +256,7 @@ export const DashboardPage: React.FC = () => {
                         petId={pet.id}
                         onReminderComplete={() => loadData()}
                         onReminderCancel={() => loadData()}
-                        onHasReminders={(hasReminders) => handleHasReminders(pet.id, hasReminders)}
+                        onHasReminders={hasReminders => handleHasReminders(pet.id, hasReminders)}
                       />
                     </div>
                   ))}
