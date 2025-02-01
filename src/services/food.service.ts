@@ -92,13 +92,28 @@ const FOOD_RECOMMENDATIONS = {
 };
 
 export const getFoodRecommendation = (pet: Pet): FoodRecommendation | null => {
-  const weight = Math.round(pet.weight);
-  if (weight < 1 || weight > 9) return null;
+  // Si le poids est inférieur à 0.5kg ou supérieur à 9.5kg, pas de recommandation
+  if (pet.weight < 0.5 || pet.weight > 9.5) return null;
+
+  // Déterminer la catégorie de poids avec des intervalles précis
+  let weightCategory: string;
+  if (pet.weight < 2) weightCategory = '1';
+  else if (pet.weight < 3) weightCategory = '2';
+  else if (pet.weight < 4) weightCategory = '3';
+  else if (pet.weight < 5) weightCategory = '4';
+  else if (pet.weight < 6) weightCategory = '5';
+  else if (pet.weight < 7) weightCategory = '6';
+  else if (pet.weight < 8) weightCategory = '7';
+  else if (pet.weight < 9) weightCategory = '8';
+  else if (pet.weight <= 10) weightCategory = '9';
+  else return null;
 
   const ageInMonths = Math.floor((Date.now() - new Date(pet.birthDate).getTime()) / (1000 * 60 * 60 * 24 * 30));
   
+  // Déterminer la catégorie d'âge
   let ageRange = '';
-  if (ageInMonths === 2) ageRange = '2';
+  if (ageInMonths < 2) return null; // Trop jeune pour les recommandations
+  else if (ageInMonths === 2) ageRange = '2';
   else if (ageInMonths === 3) ageRange = '3';
   else if (ageInMonths === 4) ageRange = '4';
   else if (ageInMonths >= 5 && ageInMonths <= 6) ageRange = '5-6';
@@ -107,9 +122,10 @@ export const getFoodRecommendation = (pet: Pet): FoodRecommendation | null => {
   else if (ageInMonths >= 11 && ageInMonths <= 12) ageRange = '11-12';
   else ageRange = '13+';
 
-  const weightRecommendations = FOOD_RECOMMENDATIONS[weight as keyof typeof FOOD_RECOMMENDATIONS];
+  const weightRecommendations = FOOD_RECOMMENDATIONS[weightCategory as keyof typeof FOOD_RECOMMENDATIONS];
   if (!weightRecommendations) return null;
 
+  // Trouver la recommandation correspondante
   for (const [range, recommendation] of Object.entries(weightRecommendations)) {
     if (range.startsWith(ageRange) || (range.includes('+') && ageInMonths >= parseInt(range))) {
       return recommendation;

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Pet, PetStatus, WeightMeasurement } from '../../types/pet';
 import { differenceInYears, differenceInMonths, differenceInDays } from 'date-fns';
-import { useNavigate } from 'react-router-dom';
 import { WeightService } from '../../services/weight.service';
 import { 
   ArrowUpIcon, 
@@ -26,7 +25,6 @@ export const PetCard: React.FC<PetCardProps> = ({
   onDelete, 
   variant = 'detailed' 
 }) => {
-  const navigate = useNavigate();
   const [weightTrend, setWeightTrend] = useState<'up' | 'down' | 'stable' | null>(null);
   const [latestWeight, setLatestWeight] = useState<WeightMeasurement | null>(null);
   const [previousWeight, setPreviousWeight] = useState<WeightMeasurement | null>(null);
