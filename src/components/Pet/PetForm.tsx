@@ -8,6 +8,7 @@ import { PetMedicalDetails } from './PetMedicalDetails';
 import { WeightService } from '../../services/weight.service';
 import { PhotoService } from '../../services/photo.service';
 import { PetPhotoUpload } from './PetPhotoUpload';
+import { PlusIcon, ClockIcon, ChartBarIcon } from '@heroicons/react/24/outline';
 
 interface PetFormProps {
   initialData?: Partial<Pet>;
@@ -25,6 +26,10 @@ export const PetFormWithDetails: React.FC<PetFormProps> = ({
 }) => {
   const [weightHistory, setWeightHistory] = useState<WeightMeasurement[]>([]);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [showAddWeight, setShowAddWeight] = useState(false);
+  const [showWeightHistory, setShowWeightHistory] = useState(false);
+  const [showWeightChart, setShowWeightChart] = useState(true);
+  const [activeTab, setActiveTab] = useState<'weight' | 'medical'>('weight');
   const [formData, setFormData] = useState({
     name: initialData?.name || '',
     species: initialData?.species || PetSpecies.DOG,
@@ -51,6 +56,12 @@ export const PetFormWithDetails: React.FC<PetFormProps> = ({
     } catch (error) {
       console.error('Erreur lors du chargement de l\'historique du poids:', error);
     }
+  };
+
+  const handleWeightAdded = async (petId: number) => {
+    await loadWeightHistory(petId);
+    setShowAddWeight(false);
+    setShowWeightChart(true);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -136,186 +147,275 @@ export const PetFormWithDetails: React.FC<PetFormProps> = ({
 
   return (
     <div className="space-y-8">
-      {/* Formulaire de modification */}
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative">
-            {error}
+      {/* Section principale avec photo et formulaire */}
+      <div className="flex gap-8">
+        {/* Colonne de gauche - Photo */}
+        <div className="w-1/3">
+          <div className="sticky top-6">
+            <PetPhotoUpload
+              currentPhotoUrl={formData.photoUrl}
+              onPhotoChange={setPhotoFile}
+            />
           </div>
-        )}
-
-        {/* Photo de l'animal */}
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Photo de l'animal
-          </label>
-          <PetPhotoUpload
-            currentPhotoUrl={formData.photoUrl}
-            onPhotoChange={setPhotoFile}
-          />
         </div>
 
-        <div className="grid grid-cols-2 gap-6">
-          <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-              Nom
-            </label>
-            <input
-              type="text"
-              id="name"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              required
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm 
-                       focus:border-blue-500 focus:ring-blue-500"
-            />
+        {/* Colonne de droite - Formulaire */}
+        <div className="w-2/3">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative">
+                {error}
+              </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-6">
+              <div>
+                <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+                  Nom
+                </label>
+                <input
+                  type="text"
+                  id="name"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  required
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm 
+                           focus:border-blue-500 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="species" className="block text-sm font-medium text-gray-700">
+                  Espèce
+                </label>
+                <select
+                  id="species"
+                  name="species"
+                  value={formData.species}
+                  onChange={handleChange}
+                  required
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm 
+                           focus:border-blue-500 focus:ring-blue-500"
+                >
+                  {Object.values(PetSpecies).map((species) => (
+                    <option key={species} value={species}>
+                      {species}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label htmlFor="breed" className="block text-sm font-medium text-gray-700">
+                  Race
+                </label>
+                <input
+                  type="text"
+                  id="breed"
+                  name="breed"
+                  value={formData.breed}
+                  onChange={handleChange}
+                  required
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm 
+                           focus:border-blue-500 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="birthDate" className="block text-sm font-medium text-gray-700">
+                  Date de naissance
+                </label>
+                <input
+                  type="date"
+                  id="birthDate"
+                  name="birthDate"
+                  value={formData.birthDate}
+                  onChange={handleChange}
+                  required
+                  max={new Date().toISOString().split('T')[0]}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm 
+                           focus:border-blue-500 focus:ring-blue-500"
+                />
+                {formData.birthDate && (
+                  <p className="mt-1 text-sm text-gray-500">
+                    Âge: {calculateAge(formData.birthDate)}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label htmlFor="weight" className="block text-sm font-medium text-gray-700">
+                  Poids (kg)
+                </label>
+                <input
+                  type="number"
+                  id="weight"
+                  name="weight"
+                  value={formData.weight}
+                  onChange={handleChange}
+                  required
+                  min="0"
+                  step="0.1"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm 
+                           focus:border-blue-500 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="status" className="block text-sm font-medium text-gray-700">
+                  État de santé
+                </label>
+                <select
+                  id="status"
+                  name="status"
+                  value={formData.status}
+                  onChange={handleChange}
+                  required
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm 
+                           focus:border-blue-500 focus:ring-blue-500"
+                >
+                  {Object.values(PetStatus).map((status) => (
+                    <option key={status} value={status}>
+                      {status}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="flex justify-end space-x-3">
+              <button
+                type="button"
+                onClick={onCancel}
+                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 
+                         hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500"
+              >
+                Annuler
+              </button>
+              <button
+                type="submit"
+                disabled={loading}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 
+                         focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+              >
+                {loading ? 'Enregistrement...' : 'Enregistrer les modifications'}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      {/* Système d'onglets et contenu */}
+      {initialData?.id && (
+        <div className="bg-white rounded-lg shadow-sm">
+          {/* Onglets */}
+          <div className="border-b border-gray-200">
+            <nav className="-mb-px flex" aria-label="Tabs">
+              <button
+                onClick={() => setActiveTab('weight')}
+                className={`w-1/2 py-4 px-1 text-center border-b-2 font-medium text-sm
+                  ${activeTab === 'weight'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+              >
+                Suivi du poids
+              </button>
+              <button
+                onClick={() => setActiveTab('medical')}
+                className={`w-1/2 py-4 px-1 text-center border-b-2 font-medium text-sm
+                  ${activeTab === 'medical'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+              >
+                Suivi médical
+              </button>
+            </nav>
           </div>
 
-          <div>
-            <label htmlFor="species" className="block text-sm font-medium text-gray-700">
-              Espèce
-            </label>
-            <select
-              id="species"
-              name="species"
-              value={formData.species}
-              onChange={handleChange}
-              required
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm 
-                       focus:border-blue-500 focus:ring-blue-500"
-            >
-              {Object.values(PetSpecies).map((species) => (
-                <option key={species} value={species}>
-                  {species}
-                </option>
-              ))}
-            </select>
-          </div>
+          {/* Contenu des onglets */}
+          <div className="p-6">
+            {activeTab === 'weight' && (
+              <div>
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-semibold text-gray-900">Suivi du poids</h2>
+                  <div className="flex space-x-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowAddWeight(!showAddWeight);
+                        setShowWeightHistory(false);
+                        setShowWeightChart(false);
+                      }}
+                      className={`p-2 rounded-full hover:bg-gray-100 transition-colors ${
+                        showAddWeight ? 'bg-gray-100 text-blue-600' : 'text-gray-600'
+                      }`}
+                      title="Ajouter une mesure"
+                    >
+                      <PlusIcon className="h-5 w-5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowWeightHistory(!showWeightHistory);
+                        setShowAddWeight(false);
+                        setShowWeightChart(false);
+                      }}
+                      className={`p-2 rounded-full hover:bg-gray-100 transition-colors ${
+                        showWeightHistory ? 'bg-gray-100 text-blue-600' : 'text-gray-600'
+                      }`}
+                      title="Historique des poids"
+                    >
+                      <ClockIcon className="h-5 w-5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowWeightChart(!showWeightChart);
+                        setShowAddWeight(false);
+                        setShowWeightHistory(false);
+                      }}
+                      className={`p-2 rounded-full hover:bg-gray-100 transition-colors ${
+                        showWeightChart ? 'bg-gray-100 text-blue-600' : 'text-gray-600'
+                      }`}
+                      title="Graphique de poids"
+                    >
+                      <ChartBarIcon className="h-5 w-5" />
+                    </button>
+                  </div>
+                </div>
 
-          <div>
-            <label htmlFor="breed" className="block text-sm font-medium text-gray-700">
-              Race
-            </label>
-            <input
-              type="text"
-              id="breed"
-              name="breed"
-              value={formData.breed}
-              onChange={handleChange}
-              required
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm 
-                       focus:border-blue-500 focus:ring-blue-500"
-            />
-          </div>
+                {showWeightChart && <WeightChart weightHistory={weightHistory} />}
 
-          <div>
-            <label htmlFor="birthDate" className="block text-sm font-medium text-gray-700">
-              Date de naissance
-            </label>
-            <input
-              type="date"
-              id="birthDate"
-              name="birthDate"
-              value={formData.birthDate}
-              onChange={handleChange}
-              required
-              max={new Date().toISOString().split('T')[0]}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm 
-                       focus:border-blue-500 focus:ring-blue-500"
-            />
-            {formData.birthDate && (
-              <p className="mt-1 text-sm text-gray-500">
-                Âge: {calculateAge(formData.birthDate)}
-              </p>
+                {showAddWeight && (
+                  <div className="mt-6">
+                    <AddWeightForm 
+                      petId={initialData.id} 
+                      onWeightAdded={() => handleWeightAdded(initialData.id!)} 
+                    />
+                  </div>
+                )}
+
+                {showWeightHistory && (
+                  <div className="mt-6">
+                    <WeightList 
+                      weights={weightHistory} 
+                      onWeightUpdated={() => loadWeightHistory(initialData.id!)} 
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+
+            {activeTab === 'medical' && (
+              <div>
+                <h2 className="text-xl font-semibold text-gray-900 mb-4">Suivi médical</h2>
+                <PetMedicalDetails petId={initialData.id} />
+              </div>
             )}
           </div>
-
-          <div>
-            <label htmlFor="weight" className="block text-sm font-medium text-gray-700">
-              Poids (kg)
-            </label>
-            <input
-              type="number"
-              id="weight"
-              name="weight"
-              value={formData.weight}
-              onChange={handleChange}
-              required
-              min="0"
-              step="0.1"
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm 
-                       focus:border-blue-500 focus:ring-blue-500"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="status" className="block text-sm font-medium text-gray-700">
-              État de santé
-            </label>
-            <select
-              id="status"
-              name="status"
-              value={formData.status}
-              onChange={handleChange}
-              required
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm 
-                       focus:border-blue-500 focus:ring-blue-500"
-            >
-              {Object.values(PetStatus).map((status) => (
-                <option key={status} value={status}>
-                  {status}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        <div className="flex justify-end space-x-3">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 
-                     hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500"
-          >
-            Annuler
-          </button>
-          <button
-            type="submit"
-            disabled={loading}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 
-                     focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
-          >
-            {loading ? 'Enregistrement...' : 'Enregistrer les modifications'}
-          </button>
-        </div>
-      </form>
-
-      {/* Historique des poids */}
-      {initialData?.id && (
-        <div className="space-y-6">
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Suivi du poids</h2>
-            <WeightChart weightHistory={weightHistory} />
-            <div className="mt-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Ajouter une mesure</h3>
-              <AddWeightForm 
-                petId={initialData.id} 
-                onWeightAdded={() => loadWeightHistory(initialData.id!)} 
-              />
-            </div>
-            <WeightList 
-              weights={weightHistory} 
-              onWeightUpdated={() => loadWeightHistory(initialData.id!)} 
-            />
-          </div>
-        </div>
-      )}
-
-      {/* Suivi médical */}
-      {initialData?.id && (
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <PetMedicalDetails petId={initialData.id} />
         </div>
       )}
     </div>

@@ -3,7 +3,13 @@ import { Pet, PetStatus, WeightMeasurement } from '../../types/pet';
 import { differenceInYears, differenceInMonths, differenceInDays } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { WeightService } from '../../services/weight.service';
-import { ArrowUpIcon, ArrowDownIcon, MinusIcon, PhotoIcon } from '@heroicons/react/24/solid';
+import { 
+  ArrowUpIcon, 
+  ArrowDownIcon, 
+  MinusIcon, 
+  PhotoIcon,
+  TrashIcon
+} from '@heroicons/react/24/solid';
 
 interface PetCardProps {
   pet: Pet;
@@ -109,8 +115,10 @@ export const PetCard: React.FC<PetCardProps> = ({
     return `${years} an${years > 1 ? 's' : ''}`;
   };
 
-  const handleEdit = () => {
-    navigate(`/pet/${pet.id}`);
+  const handleCardClick = () => {
+    if (onEdit) {
+      onEdit(pet);
+    }
   };
 
   const renderWeight = () => {
@@ -129,7 +137,10 @@ export const PetCard: React.FC<PetCardProps> = ({
 
   if (variant === 'compact') {
     return (
-      <div className="bg-white rounded-lg shadow p-4 hover:shadow-md transition-shadow">
+      <div 
+        onClick={handleCardClick}
+        className="bg-white rounded-lg shadow p-4 hover:shadow-md transition-shadow cursor-pointer relative group"
+      >
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             {pet.photoUrl ? (
@@ -152,12 +163,26 @@ export const PetCard: React.FC<PetCardProps> = ({
             {pet.status}
           </span>
         </div>
+        {onDelete && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete(pet.id);
+            }}
+            className="absolute top-2 right-2 p-1 text-gray-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
+          >
+            <TrashIcon className="h-5 w-5" />
+          </button>
+        )}
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow">
+    <div 
+      onClick={handleCardClick}
+      className="bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow cursor-pointer relative group"
+    >
       <div className="flex justify-between">
         <div className="flex space-x-4">
           {pet.photoUrl ? (
@@ -197,26 +222,16 @@ export const PetCard: React.FC<PetCardProps> = ({
         </div>
       </div>
 
-      {(onEdit || onDelete) && (
-        <div className="mt-6 flex justify-end space-x-3">
-          {onEdit && (
-            <button
-              onClick={() => onEdit(pet)}
-              className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            >
-              Modifier
-            </button>
-          )}
-          {onDelete && (
-            <button
-              onClick={() => onDelete(pet.id)}
-              className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 
-                       transition-colors focus:outline-none focus:ring-2 focus:ring-red-500"
-            >
-              Supprimer
-            </button>
-          )}
-        </div>
+      {onDelete && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete(pet.id);
+          }}
+          className="absolute top-4 right-4 p-1.5 text-gray-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity rounded-full hover:bg-red-50"
+        >
+          <TrashIcon className="h-5 w-5" />
+        </button>
       )}
     </div>
   );

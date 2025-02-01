@@ -40,7 +40,7 @@ export const PetPhotoUpload: React.FC<PetPhotoUploadProps> = ({
           <img
             src={previewUrl}
             alt="Photo de l'animal"
-            className="w-full h-48 object-cover rounded-lg"
+            className="w-full h-72 object-cover rounded-lg shadow-sm"
           />
           <button
             type="button"
@@ -54,7 +54,7 @@ export const PetPhotoUpload: React.FC<PetPhotoUploadProps> = ({
       ) : (
         <div
           onClick={() => fileInputRef.current?.click()}
-          className="w-full h-48 border-2 border-dashed border-gray-300 rounded-lg flex flex-col 
+          className="w-full h-72 border-2 border-dashed border-gray-300 rounded-lg flex flex-col 
                    items-center justify-center cursor-pointer hover:border-gray-400 
                    transition-colors duration-200"
         >

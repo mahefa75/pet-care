@@ -84,7 +84,7 @@ export const PetsPage: React.FC = () => {
       <Offcanvas
         isOpen={showForm}
         onClose={() => setShowForm(false)}
-        title={selectedPet ? 'Modifier un animal' : 'Ajouter un animal'}
+        title={selectedPet ? `Modifier les détails de ${selectedPet.name}` : 'Ajouter un animal'}
         size={selectedPet ? 'xl' : 'md'}
       >
         {selectedPet ? (
