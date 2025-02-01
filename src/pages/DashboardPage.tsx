@@ -19,6 +19,8 @@ import { Pet, WeightMeasurement } from '../types/pet';
 import { UpcomingReminders } from '../components/Treatment/UpcomingReminders';
 import { CalendarIcon } from '@heroicons/react/24/outline';
 import { GroupedFoodRecommendation } from '../components/Pet/FoodRecommendation';
+import { BulkWeightEntry } from '../components/Weight/BulkWeightEntry';
+import { Button } from '../components/UI/Button';
 
 ChartJS.register(
   CategoryScale,
@@ -41,6 +43,7 @@ export const DashboardPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [hasAnyReminders, setHasAnyReminders] = useState(false);
   const remindersMap = new Map<number, boolean>();
+  const [isBulkWeightEntryOpen, setIsBulkWeightEntryOpen] = useState(false);
 
   const handleHasReminders = (petId: number, hasReminders: boolean) => {
     remindersMap.set(petId, hasReminders);
@@ -177,9 +180,6 @@ export const DashboardPage: React.FC = () => {
     }
   };
 
-  // Ajout d'un log pour voir si le rendu se fait
-  console.log('État actuel:', { loading, error, petsCount: pets.length, weightDataSize: weightData.size });
-
   if (loading) {
     return (
       <div className="flex justify-center items-center h-32">
@@ -197,7 +197,6 @@ export const DashboardPage: React.FC = () => {
     );
   }
 
-  // Si pas de données, afficher un message
   if (pets.length === 0) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-8">
@@ -215,7 +214,15 @@ export const DashboardPage: React.FC = () => {
         {/* Graphique des poids */}
         <div className="lg:col-span-3">
           <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Suivi des poids</h2>
+            <div className="flex justify-between items-center mb-8">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">Suivi des poids</h2>
+              <Button
+                onClick={() => setIsBulkWeightEntryOpen(true)}
+                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                Saisie des poids en masse
+              </Button>
+            </div>
             {weightData.size > 0 ? (
               <div style={{ height: '400px' }}>
                 <Line data={getChartData()} options={options} />
@@ -275,6 +282,13 @@ export const DashboardPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      <BulkWeightEntry
+        pets={pets}
+        isOpen={isBulkWeightEntryOpen}
+        onClose={() => setIsBulkWeightEntryOpen(false)}
+        onSave={loadData}
+      />
     </div>
   );
 }; 

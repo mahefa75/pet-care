@@ -2,6 +2,8 @@ import { db } from '../lib/db';
 import { WeightMeasurement } from '../types/pet';
 
 export class WeightService {
+  private baseUrl = '/api';  // ou l'URL de votre API
+
   async getWeightHistory(petId: number): Promise<WeightMeasurement[]> {
     const measurements = await db.weightMeasurements
       .where('petId')
@@ -82,5 +84,29 @@ export class WeightService {
 
   async deleteWeight(id: number): Promise<void> {
     await db.weightMeasurements.delete(id);
+  }
+
+  async addWeight(petId: number, data: { date: Date; weight: number }) {
+    try {
+      const response = await fetch(`${this.baseUrl}/pets/${petId}/weights`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          date: data.date.toISOString(),
+          weight: data.weight
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de l\'ajout du poids');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Erreur lors de l\'ajout du poids:', error);
+      throw error;
+    }
   }
 } 
