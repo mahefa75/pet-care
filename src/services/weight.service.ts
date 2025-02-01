@@ -1,5 +1,12 @@
 import { db } from '../lib/db';
 import { WeightMeasurement } from '../types/pet';
+import { Table } from 'dexie';
+
+type NewWeightMeasurement = Partial<WeightMeasurement> & {
+  petId: number;
+  date: Date;
+  weight: number;
+};
 
 export class WeightService {
   private baseUrl = '/api';  // ou l'URL de votre API
@@ -86,27 +93,28 @@ export class WeightService {
     await db.weightMeasurements.delete(id);
   }
 
-  async addWeight(petId: number, data: { date: Date; weight: number }) {
+  async addWeight(petId: number, data: { date: Date; weight: number }): Promise<WeightMeasurement> {
     try {
-      const response = await fetch(`${this.baseUrl}/pets/${petId}/weights`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          date: data.date.toISOString(),
-          weight: data.weight
-        }),
-      });
+      // S'assurer que le poids est arrondi à 3 décimales
+      const roundedWeight = Math.round(data.weight * 1000) / 1000;
+      
+      // Ajouter à la base de données et récupérer l'ID généré
+      const id = await db.weightMeasurements.add({
+        petId,
+        date: new Date(data.date),
+        weight: roundedWeight
+      } as any);
 
-      if (!response.ok) {
-        throw new Error('Erreur lors de l\'ajout du poids');
-      }
-
-      return await response.json();
+      // Retourner l'enregistrement complet
+      return {
+        id,
+        petId,
+        date: new Date(data.date),
+        weight: roundedWeight
+      };
     } catch (error) {
       console.error('Erreur lors de l\'ajout du poids:', error);
-      throw error;
+      throw new Error('Erreur lors de l\'ajout du poids');
     }
   }
 } 

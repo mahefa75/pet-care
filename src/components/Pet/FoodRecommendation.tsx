@@ -16,36 +16,40 @@ interface RecommendationGroup {
 }
 
 export const GroupedFoodRecommendation: React.FC<GroupedFoodRecommendationProps> = ({ pets }) => {
-  const groupRecommendations = (): RecommendationGroup[] => {
-    const groups: RecommendationGroup[] = [];
-    
-    pets.forEach(pet => {
-      const recommendation = getFoodRecommendation(pet);
-      if (!recommendation) return;
+  const [recommendations, setRecommendations] = React.useState<RecommendationGroup[]>([]);
 
-      const existingGroup = groups.find(
-        group => 
-          group.minPortion === recommendation.minPortion && 
-          group.maxPortion === recommendation.maxPortion &&
-          group.isAdult === recommendation.isAdult
-      );
+  React.useEffect(() => {
+    const fetchRecommendations = async () => {
+      const groups: RecommendationGroup[] = [];
+      
+      for (const pet of pets) {
+        const recommendation = await getFoodRecommendation(pet);
+        if (!recommendation) continue;
 
-      if (existingGroup) {
-        existingGroup.pets.push(pet);
-      } else {
-        groups.push({
-          pets: [pet],
-          ...recommendation
-        });
+        const existingGroup = groups.find(
+          group => 
+            group.minPortion === recommendation.minPortion && 
+            group.maxPortion === recommendation.maxPortion &&
+            group.isAdult === recommendation.isAdult
+        );
+
+        if (existingGroup) {
+          existingGroup.pets.push(pet);
+        } else {
+          groups.push({
+            pets: [pet],
+            ...recommendation
+          });
+        }
       }
-    });
 
-    return groups;
-  };
+      setRecommendations(groups);
+    };
 
-  const recommendationGroups = groupRecommendations();
+    fetchRecommendations();
+  }, [pets]);
 
-  if (recommendationGroups.length === 0) {
+  if (recommendations.length === 0) {
     return null;
   }
 
@@ -59,7 +63,7 @@ export const GroupedFoodRecommendation: React.FC<GroupedFoodRecommendationProps>
       </Box>
       
       <div className="space-y-4">
-        {recommendationGroups.map((group, index) => (
+        {recommendations.map((group, index) => (
           <Box key={index} mb={2}>
             <Typography variant="subtitle1" color="primary" gutterBottom>
               {group.pets.map(pet => pet.name).join(', ')}

@@ -1,4 +1,5 @@
 import { Pet } from '../types/pet';
+import { WeightService } from './weight.service';
 
 interface FoodRecommendation {
   minPortion: number;
@@ -91,21 +92,29 @@ const FOOD_RECOMMENDATIONS = {
   },
 };
 
-export const getFoodRecommendation = (pet: Pet): FoodRecommendation | null => {
+const weightService = new WeightService();
+
+export const getFoodRecommendation = async (pet: Pet): Promise<FoodRecommendation | null> => {
+  // Récupérer le dernier poids enregistré ou utiliser le poids du profil
+  const latestWeight = await weightService.getLatestWeight(pet.id);
+  const currentWeight = latestWeight?.weight || pet.weight;
+
+  if (!currentWeight) return null;
+
   // Si le poids est inférieur à 0.5kg ou supérieur à 9.5kg, pas de recommandation
-  if (pet.weight < 0.5 || pet.weight > 9.5) return null;
+  if (currentWeight < 0.5 || currentWeight > 9.5) return null;
 
   // Déterminer la catégorie de poids avec des intervalles précis
   let weightCategory: string;
-  if (pet.weight < 2) weightCategory = '1';
-  else if (pet.weight < 3) weightCategory = '2';
-  else if (pet.weight < 4) weightCategory = '3';
-  else if (pet.weight < 5) weightCategory = '4';
-  else if (pet.weight < 6) weightCategory = '5';
-  else if (pet.weight < 7) weightCategory = '6';
-  else if (pet.weight < 8) weightCategory = '7';
-  else if (pet.weight < 9) weightCategory = '8';
-  else if (pet.weight <= 10) weightCategory = '9';
+  if (currentWeight < 2) weightCategory = '1';
+  else if (currentWeight < 3) weightCategory = '2';
+  else if (currentWeight < 4) weightCategory = '3';
+  else if (currentWeight < 5) weightCategory = '4';
+  else if (currentWeight < 6) weightCategory = '5';
+  else if (currentWeight < 7) weightCategory = '6';
+  else if (currentWeight < 8) weightCategory = '7';
+  else if (currentWeight < 9) weightCategory = '8';
+  else if (currentWeight <= 10) weightCategory = '9';
   else return null;
 
   const ageInMonths = Math.floor((Date.now() - new Date(pet.birthDate).getTime()) / (1000 * 60 * 60 * 24 * 30));
