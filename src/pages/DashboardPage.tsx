@@ -210,10 +210,6 @@ export const DashboardPage: React.FC = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Tableau de bord</h1>
-      </div>
-
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         {/* Graphique des poids */}
         <div className="lg:col-span-3 bg-white rounded-lg shadow-sm p-6">

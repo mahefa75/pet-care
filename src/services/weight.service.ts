@@ -8,14 +8,14 @@ export class WeightService {
       .equals(petId)
       .toArray();
 
-    // Trier par date et s'assurer que les poids ont 3 décimales
+    // Trier par date (du plus récent au plus ancien) et s'assurer que les poids ont 3 décimales
     return measurements
       .map(m => ({
         ...m,
         weight: Math.round(m.weight * 1000) / 1000,
         date: new Date(m.date)
       }))
-      .sort((a, b) => a.date.getTime() - b.date.getTime());
+      .sort((a, b) => b.date.getTime() - a.date.getTime());
   }
 
   async addWeightMeasurement(measurement: Omit<WeightMeasurement, 'id'>): Promise<number> {

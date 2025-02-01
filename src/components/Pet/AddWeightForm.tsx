@@ -64,36 +64,38 @@ export const AddWeightForm: React.FC<AddWeightFormProps> = ({ petId, onWeightAdd
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <label htmlFor="weight" className="block text-sm font-medium text-gray-700">
-          Poids (kg) *
-        </label>
-        <input
-          type="number"
-          id="weight"
-          step="0.001"
-          min="0"
-          value={weight}
-          onChange={handleWeightChange}
-          placeholder="0.000"
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-          required
-        />
-        <p className="mt-1 text-sm text-gray-500">Précision jusqu'à 3 décimales (0.001)</p>
-      </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label htmlFor="date" className="block text-sm font-medium text-gray-700">
+            Date de la mesure *
+          </label>
+          <input
+            type="date"
+            id="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+            required
+          />
+        </div>
 
-      <div>
-        <label htmlFor="date" className="block text-sm font-medium text-gray-700">
-          Date de la mesure *
-        </label>
-        <input
-          type="date"
-          id="date"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-          required
-        />
+        <div>
+          <label htmlFor="weight" className="block text-sm font-medium text-gray-700">
+            Poids (kg) *
+          </label>
+          <input
+            type="number"
+            id="weight"
+            step="0.001"
+            min="0"
+            value={weight}
+            onChange={handleWeightChange}
+            placeholder="0.000"
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+            required
+          />
+          <p className="mt-1 text-sm text-gray-500">Précision jusqu'à 3 décimales (0.001)</p>
+        </div>
       </div>
 
       <div>

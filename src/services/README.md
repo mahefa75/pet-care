@@ -110,6 +110,43 @@ class PhotoService {
 }
 ```
 
+### WeightService
+
+```typescript
+import { WeightMeasurement } from '../types';
+
+class WeightService {
+  // Récupérer l'historique des poids d'un animal
+  async getWeightHistory(petId: number): Promise<WeightMeasurement[]>
+
+  // Ajouter une nouvelle mesure de poids
+  async addWeightMeasurement(measurement: Omit<WeightMeasurement, 'id'>): Promise<number>
+
+  // Récupérer le dernier poids enregistré
+  async getLatestWeight(petId: number): Promise<WeightMeasurement | undefined>
+}
+```
+
+### TreatmentService
+
+```typescript
+import { Treatment, Surgery, Reminder } from '../types';
+
+class TreatmentService {
+  // Créer une nouvelle chirurgie
+  async createSurgery(surgery: Omit<Surgery, 'id' | 'createdAt' | 'updatedAt'>): Promise<Surgery>
+
+  // Mettre à jour un traitement
+  async updateTreatment(id: number, treatment: Partial<Treatment>): Promise<Treatment>
+
+  // Supprimer un traitement et ses rappels associés
+  async deleteTreatment(id: number): Promise<void>
+
+  // Gestion des rappels (méthode privée)
+  private async createReminder(reminder: Omit<Reminder, 'id'>): Promise<Reminder>
+}
+```
+
 ## 🔐 Gestion des Erreurs
 
 Tous les services utilisent un gestionnaire d'erreurs standardisé :
@@ -218,7 +255,7 @@ VITE_API_VERSION=v1
 
 Cette documentation détaille les composants React disponibles dans le projet PetCare.
 
-## 🏗 Structure des Composants
+## 🏗 Structure des Composants Mise à Jour
 
 ```
 components/
@@ -227,7 +264,19 @@ components/
 │   ├── PetList.tsx
 │   ├── PetForm.tsx
 │   ├── PetDetails.tsx
-│   └── PetFilters.tsx
+│   ├── PetFilters.tsx
+│   ├── PetPhotoUpload.tsx
+│   ├── PetMedicalDetails.tsx
+│   ├── AddWeightForm.tsx
+│   └── WeightChart.tsx
+├── Weight/
+│   └── WeightList.tsx
+├── Treatment/
+│   ├── TreatmentHistory.tsx
+│   ├── UpcomingReminders.tsx
+│   ├── MedicalFollowUp.tsx
+│   ├── MedicalFollowUpTest.tsx
+│   └── AddTreatmentForm.tsx
 ├── Appointment/
 │   ├── AppointmentCard.tsx
 │   ├── AppointmentList.tsx
@@ -254,52 +303,123 @@ components/
     └── Loading.tsx
 ```
 
-## 📚 Composants Principaux
+## 📚 Nouveaux Composants
 
-### PetCard
+### PetPhotoUpload
 
 ```typescript
-interface PetCardProps {
-  pet: Pet;
-  onEdit?: (pet: Pet) => void;
-  onDelete?: (id: number) => void;
-  variant?: 'compact' | 'detailed';
+interface PetPhotoUploadProps {
+  currentPhotoUrl?: string;
+  onPhotoChange: (photoUrl: string) => void;
+  onError?: (error: Error) => void;
 }
 
-const PetCard: React.FC<PetCardProps> = ({ pet, onEdit, onDelete, variant = 'detailed' }) => {
-  // Affiche les informations d'un animal dans une carte
+const PetPhotoUpload: React.FC<PetPhotoUploadProps> = ({
+  currentPhotoUrl,
+  onPhotoChange,
+  onError
+}) => {
+  // Composant pour l'upload et la gestion des photos d'animaux
 }
 ```
 
-### AppointmentForm
+### WeightChart
 
 ```typescript
-interface AppointmentFormProps {
-  initialData?: Partial<Appointment>;
-  onSubmit: (data: Omit<Appointment, 'id'>) => Promise<void>;
-  onCancel?: () => void;
-  availableServices: Service[];
-  availableStaff: Staff[];
+interface WeightChartProps {
+  petId: number;
+  measurements: WeightMeasurement[];
+  period?: 'week' | 'month' | 'year';
+  onPeriodChange?: (period: string) => void;
 }
 
-const AppointmentForm: React.FC<AppointmentFormProps> = ({ initialData, onSubmit, onCancel, availableServices, availableStaff }) => {
-  // Formulaire pour créer/éditer un rendez-vous
+const WeightChart: React.FC<WeightChartProps> = ({
+  petId,
+  measurements,
+  period = 'month',
+  onPeriodChange
+}) => {
+  // Graphique d'évolution du poids
 }
 ```
 
-### Calendar
+### MedicalFollowUp
 
 ```typescript
-interface CalendarProps {
-  appointments: Appointment[];
-  onDateSelect: (date: Date) => void;
-  onAppointmentClick: (appointment: Appointment) => void;
-  view?: 'day' | 'week' | 'month';
+interface MedicalFollowUpProps {
+  petId: number;
+  treatments: Treatment[];
+  onTreatmentComplete: (treatmentId: number) => void;
 }
 
-const Calendar: React.FC<CalendarProps> = ({ appointments, onDateSelect, onAppointmentClick, view = 'week' }) => {
-  // Affiche un calendrier avec les rendez-vous
+const MedicalFollowUp: React.FC<MedicalFollowUpProps> = ({
+  petId,
+  treatments,
+  onTreatmentComplete
+}) => {
+  // Suivi médical complet
 }
+```
+
+### UpcomingReminders
+
+```typescript
+interface UpcomingRemindersProps {
+  reminders: Reminder[];
+  onReminderComplete: (reminderId: number) => void;
+  onReminderDismiss: (reminderId: number) => void;
+}
+
+const UpcomingReminders: React.FC<UpcomingRemindersProps> = ({
+  reminders,
+  onReminderComplete,
+  onReminderDismiss
+}) => {
+  // Liste des rappels à venir
+}
+```
+
+## 📱 Pages Principales
+
+### DashboardPage
+
+```typescript
+const DashboardPage: React.FC = () => {
+  // Page principale avec vue d'ensemble
+  return (
+    <div className="grid grid-cols-12 gap-4">
+      <div className="col-span-8">
+        <UpcomingReminders />
+        <TreatmentHistory />
+      </div>
+      <div className="col-span-4">
+        <PetList />
+        <WeightChart />
+      </div>
+    </div>
+  );
+};
+```
+
+### PetDetailsPage
+
+```typescript
+interface PetDetailsPageProps {
+  petId: number;
+}
+
+const PetDetailsPage: React.FC<PetDetailsPageProps> = ({ petId }) => {
+  // Page de détails d'un animal
+  return (
+    <div className="space-y-6">
+      <PetPhotoUpload />
+      <PetMedicalDetails />
+      <WeightChart />
+      <MedicalFollowUp />
+      <TreatmentHistory />
+    </div>
+  );
+};
 ```
 
 ## 🎨 Composants UI
@@ -332,94 +452,6 @@ interface ModalProps {
 const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, size = 'md', children }) => {
   // Modal réutilisable
 }
-```
-
-## 📝 Exemples d'Utilisation
-
-### Gestion des Rendez-vous
-
-```typescript
-const AppointmentPage: React.FC = () => {
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
-
-  return (
-    <div className="grid grid-cols-12 gap-4">
-      <div className="col-span-8">
-        <Calendar
-          appointments={appointments}
-          onDateSelect={setSelectedDate}
-          onAppointmentClick={setSelectedAppointment}
-          view="week"
-        />
-      </div>
-      <div className="col-span-4">
-        <AppointmentList
-          date={selectedDate}
-          onAppointmentSelect={setSelectedAppointment}
-        />
-      </div>
-      {selectedAppointment && (
-        <Modal
-          isOpen={true}
-          onClose={() => setSelectedAppointment(null)}
-          title="Détails du rendez-vous"
-        >
-          <AppointmentDetails appointment={selectedAppointment} />
-        </Modal>
-      )}
-    </div>
-  );
-};
-```
-
-### Gestion des Animaux
-
-```typescript
-const PetManagement: React.FC = () => {
-  const [filters, setFilters] = useState<PetFilters>({
-    species: PetSpecies.DOG,
-    status: PetStatus.HEALTHY,
-    page: 1
-  });
-
-  const handleAddPet = async (data: Omit<Pet, 'id'>) => {
-    try {
-      await petService.createPet(data);
-      // Rafraîchir la liste
-    } catch (error) {
-      // Gérer l'erreur
-    }
-  };
-
-  return (
-    <div>
-      <PetFilters
-        currentFilters={filters}
-        onFilterChange={setFilters}
-      />
-      <PetList
-        filters={filters}
-        onFilterChange={setFilters}
-      />
-      <Button onClick={() => setShowAddForm(true)}>
-        Ajouter un animal
-      </Button>
-      {showAddForm && (
-        <Modal
-          isOpen={true}
-          onClose={() => setShowAddForm(false)}
-          title="Ajouter un animal"
-        >
-          <PetForm
-            onSubmit={handleAddPet}
-            onCancel={() => setShowAddForm(false)}
-          />
-        </Modal>
-      )}
-    </div>
-  );
-};
 ```
 
 ## 🎯 Bonnes Pratiques
@@ -472,3 +504,55 @@ describe('PetCard', () => {
 - tailwindcss: ^3.0.0 (pour le styling)
 - framer-motion: ^10.0.0 (pour les animations)
 - @fullcalendar/react: ^6.0.0 (pour le calendrier) 
+
+## 🔌 Intégration Supabase
+
+Le projet utilise Supabase comme backend. Voici la configuration :
+
+```typescript
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+export const supabase = createClient(supabaseUrl, supabaseKey);
+```
+
+## 📦 Types Principaux
+
+```typescript
+// Types pour les mesures de poids
+interface WeightMeasurement {
+  id: number;
+  petId: number;
+  weight: number; // Arrondi à 3 décimales
+  date: Date;
+}
+
+// Types pour les traitements
+interface Treatment {
+  id: number;
+  petId: number;
+  type: TreatmentType;
+  startDate: Date;
+  endDate?: Date;
+  notes?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+interface Surgery extends Treatment {
+  procedure: string;
+  surgeon: Staff;
+  preOpNotes?: string;
+  postOpNotes?: string;
+}
+
+interface Reminder {
+  id: number;
+  treatmentId: number;
+  date: Date;
+  message: string;
+  isCompleted: boolean;
+}
+```
