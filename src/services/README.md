@@ -98,6 +98,18 @@ class StaffService {
 }
 ```
 
+### PhotoService
+
+```typescript
+class PhotoService {
+  // Uploader une photo et obtenir son URL en base64
+  async uploadPhoto(file: File): Promise<string>
+
+  // Supprimer une photo (à implémenter avec le backend)
+  async deletePhoto(url: string): Promise<void>
+}
+```
+
 ## 🔐 Gestion des Erreurs
 
 Tous les services utilisent un gestionnaire d'erreurs standardisé :
@@ -158,6 +170,22 @@ const isAvailable = await appointmentService.checkAvailability(
   new Date('2024-03-20T10:00:00'),
   serviceId
 );
+```
+
+### Utilisation de PhotoService
+
+```typescript
+// Upload d'une photo
+const file = event.target.files[0];
+const photoUrl = await photoService.uploadPhoto(file);
+
+// Utilisation avec un composant
+const PetPhotoUpload: React.FC<PetPhotoUploadProps> = ({
+  currentPhotoUrl,
+  onPhotoChange
+}) => {
+  // ... voir le composant pour l'implémentation
+};
 ```
 
 ## 🔄 Intercepteurs

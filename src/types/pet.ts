@@ -28,6 +28,7 @@ export interface Pet {
   weight: number;
   status: PetStatus;
   ownerId: number;
+  photoUrl?: string;
   createdAt: Date;
   updatedAt: Date;
   weightHistory?: WeightMeasurement[];

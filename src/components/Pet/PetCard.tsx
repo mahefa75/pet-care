@@ -3,7 +3,7 @@ import { Pet, PetStatus, WeightMeasurement } from '../../types/pet';
 import { differenceInYears, differenceInMonths, differenceInDays } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { WeightService } from '../../services/weight.service';
-import { ArrowUpIcon, ArrowDownIcon, MinusIcon } from '@heroicons/react/24/solid';
+import { ArrowUpIcon, ArrowDownIcon, MinusIcon, PhotoIcon } from '@heroicons/react/24/solid';
 
 interface PetCardProps {
   pet: Pet;
@@ -131,9 +131,22 @@ export const PetCard: React.FC<PetCardProps> = ({
     return (
       <div className="bg-white rounded-lg shadow p-4 hover:shadow-md transition-shadow">
         <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900">{pet.name}</h3>
-            <p className="text-sm text-gray-500">{pet.species} - {pet.breed}</p>
+          <div className="flex items-center space-x-3">
+            {pet.photoUrl ? (
+              <img
+                src={pet.photoUrl}
+                alt={pet.name}
+                className="h-12 w-12 rounded-full object-cover"
+              />
+            ) : (
+              <div className="h-12 w-12 rounded-full bg-gray-100 flex items-center justify-center">
+                <PhotoIcon className="h-6 w-6 text-gray-400" />
+              </div>
+            )}
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900">{pet.name}</h3>
+              <p className="text-sm text-gray-500">{pet.species} - {pet.breed}</p>
+            </div>
           </div>
           <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(pet.status)}`}>
             {pet.status}
@@ -145,16 +158,29 @@ export const PetCard: React.FC<PetCardProps> = ({
 
   return (
     <div className="bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow">
-      <div className="flex justify-between items-start">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">{pet.name}</h2>
-          <p className="text-gray-600 mt-1">
-            {pet.species} - {pet.breed}
-          </p>
+      <div className="flex justify-between">
+        <div className="flex space-x-4">
+          {pet.photoUrl ? (
+            <img
+              src={pet.photoUrl}
+              alt={pet.name}
+              className="h-24 w-24 rounded-lg object-cover"
+            />
+          ) : (
+            <div className="h-24 w-24 rounded-lg bg-gray-100 flex items-center justify-center">
+              <PhotoIcon className="h-12 w-12 text-gray-400" />
+            </div>
+          )}
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900">{pet.name}</h2>
+            <p className="text-gray-600 mt-1">
+              {pet.species} - {pet.breed}
+            </p>
+            <span className={`inline-block mt-2 px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(pet.status)}`}>
+              {pet.status}
+            </span>
+          </div>
         </div>
-        <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(pet.status)}`}>
-          {pet.status}
-        </span>
       </div>
 
       <div className="mt-4 grid grid-cols-2 gap-4">
@@ -175,7 +201,7 @@ export const PetCard: React.FC<PetCardProps> = ({
         <div className="mt-6 flex justify-end space-x-3">
           {onEdit && (
             <button
-              onClick={handleEdit}
+              onClick={() => onEdit(pet)}
               className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
               Modifier
