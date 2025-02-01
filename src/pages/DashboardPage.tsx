@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Line } from 'react-chartjs-2';
+import { Line, Bar } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
   PointElement,
   LineElement,
+  BarElement,
   Title,
   Tooltip,
   Legend,
@@ -27,6 +28,7 @@ ChartJS.register(
   LinearScale,
   PointElement,
   LineElement,
+  BarElement,
   Title,
   Tooltip,
   Legend,
@@ -42,6 +44,7 @@ export const DashboardPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [hasAnyReminders, setHasAnyReminders] = useState(false);
+  const [chartType, setChartType] = useState<'line' | 'bar'>('line');
   const remindersMap = new Map<number, boolean>();
   const [isBulkWeightEntryOpen, setIsBulkWeightEntryOpen] = useState(false);
 
@@ -168,6 +171,10 @@ export const DashboardPage: React.FC = () => {
           date: {
             locale: fr
           }
+        },
+        ticks: {
+          maxRotation: 90,
+          minRotation: 90
         }
       },
       y: {
@@ -215,7 +222,17 @@ export const DashboardPage: React.FC = () => {
         <div className="lg:col-span-3">
           <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
             <div className="flex justify-between items-center mb-8">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Suivi des poids</h2>
+              <div className="flex items-center gap-4">
+                <h2 className="text-xl font-semibold text-gray-900">Suivi des poids</h2>
+                <select
+                  value={chartType}
+                  onChange={(e) => setChartType(e.target.value as 'line' | 'bar')}
+                  className="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                >
+                  <option value="line">Ligne</option>
+                  <option value="bar">Barre</option>
+                </select>
+              </div>
               <Button
                 onClick={() => setIsBulkWeightEntryOpen(true)}
                 className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
@@ -225,7 +242,11 @@ export const DashboardPage: React.FC = () => {
             </div>
             {weightData.size > 0 ? (
               <div style={{ height: '400px' }}>
-                <Line data={getChartData()} options={options} />
+                {chartType === 'line' ? (
+                  <Line data={getChartData()} options={options} />
+                ) : (
+                  <Bar data={getChartData()} options={options} />
+                )}
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center h-64 text-gray-500">
