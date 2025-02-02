@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Line } from 'react-chartjs-2';
+import { Line, Bar } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
   PointElement,
   LineElement,
+  BarElement,
   Title,
   Tooltip,
   Legend,
@@ -18,12 +19,16 @@ import { PetService } from '../services/pet.service';
 import { Pet, WeightMeasurement } from '../types/pet';
 import { UpcomingReminders } from '../components/Treatment/UpcomingReminders';
 import { CalendarIcon } from '@heroicons/react/24/outline';
+import { GroupedFoodRecommendation } from '../components/Pet/FoodRecommendation';
+import { BulkWeightEntry } from '../components/Weight/BulkWeightEntry';
+import { Button } from '../components/UI/Button';
 
 ChartJS.register(
   CategoryScale,
   LinearScale,
   PointElement,
   LineElement,
+  BarElement,
   Title,
   Tooltip,
   Legend,
@@ -39,7 +44,9 @@ export const DashboardPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [hasAnyReminders, setHasAnyReminders] = useState(false);
+  const [chartType, setChartType] = useState<'line' | 'bar'>('line');
   const remindersMap = new Map<number, boolean>();
+  const [isBulkWeightEntryOpen, setIsBulkWeightEntryOpen] = useState(false);
 
   const handleHasReminders = (petId: number, hasReminders: boolean) => {
     remindersMap.set(petId, hasReminders);
@@ -164,6 +171,10 @@ export const DashboardPage: React.FC = () => {
           date: {
             locale: fr
           }
+        },
+        ticks: {
+          maxRotation: 90,
+          minRotation: 90
         }
       },
       y: {
@@ -175,9 +186,6 @@ export const DashboardPage: React.FC = () => {
       }
     }
   };
-
-  // Ajout d'un log pour voir si le rendu se fait
-  console.log('État actuel:', { loading, error, petsCount: pets.length, weightDataSize: weightData.size });
 
   if (loading) {
     return (
@@ -196,7 +204,6 @@ export const DashboardPage: React.FC = () => {
     );
   }
 
-  // Si pas de données, afficher un message
   if (pets.length === 0) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-8">
@@ -210,26 +217,51 @@ export const DashboardPage: React.FC = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Tableau de bord</h1>
-      </div>
-
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         {/* Graphique des poids */}
-        <div className="lg:col-span-3 bg-white rounded-lg shadow-sm p-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Suivi des poids</h2>
-          {weightData.size > 0 ? (
-            <div style={{ height: '400px' }}>
-              <Line data={getChartData()} options={options} />
+        <div className="lg:col-span-3">
+          <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
+            <div className="flex justify-between items-center mb-8">
+              <div className="flex items-center gap-4">
+                <h2 className="text-xl font-semibold text-gray-900">Suivi des poids</h2>
+                <select
+                  value={chartType}
+                  onChange={(e) => setChartType(e.target.value as 'line' | 'bar')}
+                  className="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                >
+                  <option value="line">Ligne</option>
+                  <option value="bar">Barre</option>
+                </select>
+              </div>
+              <Button
+                onClick={() => setIsBulkWeightEntryOpen(true)}
+                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                Saisie des poids en masse
+              </Button>
             </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center h-64 text-gray-500">
-              <svg className="w-12 h-12 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-              </svg>
-              <p>Aucune donnée de poids disponible</p>
-            </div>
-          )}
+            {weightData.size > 0 ? (
+              <div style={{ height: '400px' }}>
+                {chartType === 'line' ? (
+                  <Line data={getChartData()} options={options} />
+                ) : (
+                  <Bar data={getChartData()} options={options} />
+                )}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-64 text-gray-500">
+                <svg className="w-12 h-12 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+                <p>Aucune donnée de poids disponible</p>
+              </div>
+            )}
+          </div>
+
+          {/* Recommandations alimentaires */}
+          <div className="bg-white rounded-lg shadow-sm">
+            <GroupedFoodRecommendation pets={pets} />
+          </div>
         </div>
 
         {/* Rappels et traitements à venir */}
@@ -252,7 +284,7 @@ export const DashboardPage: React.FC = () => {
                         petId={pet.id}
                         onReminderComplete={() => loadData()}
                         onReminderCancel={() => loadData()}
-                        onHasReminders={(hasReminders) => handleHasReminders(pet.id, hasReminders)}
+                        onHasReminders={hasReminders => handleHasReminders(pet.id, hasReminders)}
                       />
                     </div>
                   ))}
@@ -271,6 +303,13 @@ export const DashboardPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      <BulkWeightEntry
+        pets={pets}
+        isOpen={isBulkWeightEntryOpen}
+        onClose={() => setIsBulkWeightEntryOpen(false)}
+        onSave={loadData}
+      />
     </div>
   );
 }; 

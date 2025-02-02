@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { Pet } from '../types/pet';
 import { PetList } from '../components/Pet/PetList';
-import { PetForm } from '../components/Pet/PetForm';
+import { PetForm, PetFormWithDetails } from '../components/Pet/PetForm';
 import { PetService } from '../services/pet.service';
+import { Offcanvas } from '../components/UI/Offcanvas';
 
 const petService = new PetService();
 
@@ -75,23 +76,30 @@ export const PetsPage: React.FC = () => {
         </div>
       )}
 
-      {showForm ? (
-        <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-          <h2 className="text-xl font-semibold mb-4">
-            {selectedPet ? 'Modifier un animal' : 'Ajouter un animal'}
-          </h2>
-          <PetForm
-            initialData={selectedPet || undefined}
+      <PetList
+        onEdit={handleEditClick}
+        onDelete={handleDeleteClick}
+      />
+
+      <Offcanvas
+        isOpen={showForm}
+        onClose={() => setShowForm(false)}
+        title={selectedPet ? `Modifier les détails de ${selectedPet.name}` : 'Ajouter un animal'}
+        size={selectedPet ? 'xl' : 'md'}
+      >
+        {selectedPet ? (
+          <PetFormWithDetails
+            initialData={selectedPet}
             onSubmit={handleSubmit}
             onCancel={() => setShowForm(false)}
           />
-        </div>
-      ) : (
-        <PetList
-          onEdit={handleEditClick}
-          onDelete={handleDeleteClick}
-        />
-      )}
+        ) : (
+          <PetForm
+            onSubmit={handleSubmit}
+            onCancel={() => setShowForm(false)}
+          />
+        )}
+      </Offcanvas>
     </div>
   );
 }; 

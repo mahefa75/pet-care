@@ -61,7 +61,6 @@ export const WeightList: React.FC<WeightListProps> = ({ weights, onWeightUpdated
 
   return (
     <div className="mt-4">
-      <h3 className="text-lg font-medium text-gray-900 mb-4">Historique des mesures</h3>
       {error && (
         <div className="mb-4 text-red-600 text-sm">{error}</div>
       )}

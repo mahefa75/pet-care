@@ -1,21 +1,30 @@
 import { db } from '../lib/db';
 import { WeightMeasurement } from '../types/pet';
+import { Table } from 'dexie';
+
+type NewWeightMeasurement = Partial<WeightMeasurement> & {
+  petId: number;
+  date: Date;
+  weight: number;
+};
 
 export class WeightService {
+  private baseUrl = '/api';  // ou l'URL de votre API
+
   async getWeightHistory(petId: number): Promise<WeightMeasurement[]> {
     const measurements = await db.weightMeasurements
       .where('petId')
       .equals(petId)
       .toArray();
 
-    // Trier par date et s'assurer que les poids ont 3 décimales
+    // Trier par date (du plus récent au plus ancien) et s'assurer que les poids ont 3 décimales
     return measurements
       .map(m => ({
         ...m,
         weight: Math.round(m.weight * 1000) / 1000,
         date: new Date(m.date)
       }))
-      .sort((a, b) => a.date.getTime() - b.date.getTime());
+      .sort((a, b) => b.date.getTime() - a.date.getTime());
   }
 
   async addWeightMeasurement(measurement: Omit<WeightMeasurement, 'id'>): Promise<number> {
@@ -82,5 +91,30 @@ export class WeightService {
 
   async deleteWeight(id: number): Promise<void> {
     await db.weightMeasurements.delete(id);
+  }
+
+  async addWeight(petId: number, data: { date: Date; weight: number }): Promise<WeightMeasurement> {
+    try {
+      // S'assurer que le poids est arrondi à 3 décimales
+      const roundedWeight = Math.round(data.weight * 1000) / 1000;
+      
+      // Ajouter à la base de données et récupérer l'ID généré
+      const id = await db.weightMeasurements.add({
+        petId,
+        date: new Date(data.date),
+        weight: roundedWeight
+      } as any);
+
+      // Retourner l'enregistrement complet
+      return {
+        id,
+        petId,
+        date: new Date(data.date),
+        weight: roundedWeight
+      };
+    } catch (error) {
+      console.error('Erreur lors de l\'ajout du poids:', error);
+      throw new Error('Erreur lors de l\'ajout du poids');
+    }
   }
 } 
