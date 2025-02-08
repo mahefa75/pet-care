@@ -74,8 +74,6 @@ export const DataBackup: React.FC = () => {
 
   return (
     <div className="p-6 bg-white rounded-lg shadow-sm">
-      <h2 className="text-2xl font-semibold mb-6">Sauvegarde des données</h2>
-      
       <div className="space-y-8">
         {/* Export Section */}
         <div>
