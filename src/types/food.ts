@@ -27,4 +27,5 @@ export interface Food {
   description: string;
   photoUrl?: string;
   portions: FoodPortion[];
+  tableType: 'puppy' | 'adult' | 'both';
 } 

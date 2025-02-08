@@ -47,12 +47,11 @@ export const FoodManagement: React.FC = () => {
   const handleAddPortion = () => {
     const newPortion: FoodPortion = {
       criteria: {
-        weight: { min: 0, max: 0 },
-        ...(tableType !== 'adult' ? { age: { min: 0, max: 0 } } : {})
+        weight: { min: 0, max: 0 }
       },
       portions: {
         default: 0,
-        ...(tableType === 'adult' ? { byActivity: { low: 0, moderate: 0 } } : {})
+        byActivity: { low: 0, moderate: 0 }
       }
     };
     setPortions([...portions, newPortion]);
@@ -63,31 +62,63 @@ export const FoodManagement: React.FC = () => {
     if (!file) return;
 
     try {
+      // Réinitialiser l'état avant de commencer le traitement
+      setPortions([]);
+      setOcrRawData(null);
       setIsProcessingTable(true);
+
+      // Forcer un nouveau traitement avec un timestamp
+      const timestamp = Date.now();
+      console.log(`Starting new OCR processing at ${timestamp}`);
+
       const result = await rationTableService.extractFromImage(file);
-      setTableType(result.type);
-      setPortions(result.portions);
-      setOcrRawData(result.rawData || null);
+      console.log('OCR result received:', result);
+      
+      // Vérifier si on a des données valides
+      if (result.portions && result.portions.length > 0) {
+        setPortions(result.portions);
+        setOcrRawData(result.rawData || null);
+      } else {
+        throw new Error('Aucune donnée valide n\'a été extraite de l\'image');
+      }
     } catch (error) {
       console.error('Erreur lors de l\'extraction du tableau:', error);
+      // Réinitialiser le champ de fichier et l'état
+      if (e.target) {
+        e.target.value = '';
+      }
+      setPortions([]);
+      setOcrRawData(null);
       // TODO: Afficher un message d'erreur à l'utilisateur
     } finally {
       setIsProcessingTable(false);
+      // Forcer la réinitialisation du champ de fichier
+      if (e.target) {
+        e.target.value = '';
+      }
     }
   };
 
-  const handlePortionChange = (index: number, path: string, value: number) => {
+  const handlePortionChange = (
+    index: number,
+    field: string,
+    value: number | undefined
+  ) => {
     const updatedPortions = [...portions];
     const portion = { ...updatedPortions[index] };
 
-    // Mettre à jour la valeur en fonction du chemin
-    const pathParts = path.split('.');
+    // Mettre à jour le champ spécifié en utilisant la notation par points
+    const fields = field.split('.');
     let current: any = portion;
-    for (let i = 0; i < pathParts.length - 1; i++) {
-      current = current[pathParts[i]];
+    
+    for (let i = 0; i < fields.length - 1; i++) {
+      if (!current[fields[i]]) {
+        current[fields[i]] = {};
+      }
+      current = current[fields[i]];
     }
-    current[pathParts[pathParts.length - 1]] = value;
-
+    
+    current[fields[fields.length - 1]] = value;
     updatedPortions[index] = portion;
     setPortions(updatedPortions);
   };
@@ -105,7 +136,8 @@ export const FoodManagement: React.FC = () => {
       name: newFood.name,
       description: newFood.description,
       photoUrl: newFood.photoUrl,
-      portions: portions
+      portions: portions,
+      tableType: tableType
     };
 
     if (editingFoodId) {
@@ -124,6 +156,7 @@ export const FoodManagement: React.FC = () => {
     setPortions(food.portions || []);
     setShowPortionsTable(!!food.portions?.length);
     setIsAdultFood(food.portions?.[0]?.portions.byActivity !== undefined);
+    setTableType(food.tableType || 'both');
     setShowOffcanvas(true);
   };
 
@@ -142,6 +175,7 @@ export const FoodManagement: React.FC = () => {
     setTempPhotoFile(null);
     setEditingFoodId(null);
     setIsAdultFood(false);
+    setTableType('both');
   };
 
   const handleAddClick = () => {
@@ -150,106 +184,71 @@ export const FoodManagement: React.FC = () => {
   };
 
   const renderPortionFields = (portion: FoodPortion, index: number) => {
-    if (tableType === 'adult') {
-      return (
-        <div className="grid grid-cols-4 gap-2 items-start">
-          <div className="space-y-2">
-            <label className="block text-xs text-gray-600">Poids (kg)</label>
-            <div className="grid grid-cols-2 gap-2">
-              <input
-                type="number"
-                placeholder="Min"
-                value={portion.criteria.weight?.min || 0}
-                onChange={e => handlePortionChange(index, 'criteria.weight.min', Number(e.target.value))}
-                className="px-2 py-1 border rounded text-sm"
-              />
-              <input
-                type="number"
-                placeholder="Max"
-                value={portion.criteria.weight?.max || 0}
-                onChange={e => handlePortionChange(index, 'criteria.weight.max', Number(e.target.value))}
-                className="px-2 py-1 border rounded text-sm"
-              />
-            </div>
-          </div>
-          <div>
-            <label className="block text-xs text-gray-600">Activité faible</label>
-            <input
-              type="number"
-              placeholder="g/jour"
-              value={portion.portions.byActivity?.low || 0}
-              onChange={e => handlePortionChange(index, 'portions.byActivity.low', Number(e.target.value))}
-              className="w-full px-2 py-1 border rounded text-sm"
-            />
-          </div>
-          <div>
-            <label className="block text-xs text-gray-600">Activité modérée</label>
-            <input
-              type="number"
-              placeholder="g/jour"
-              value={portion.portions.byActivity?.moderate || 0}
-              onChange={e => handlePortionChange(index, 'portions.byActivity.moderate', Number(e.target.value))}
-              className="w-full px-2 py-1 border rounded text-sm"
-            />
-          </div>
-          <button
-            type="button"
-            onClick={() => handleRemovePortion(index)}
-            className="mt-6 p-1 text-gray-400 hover:text-red-600"
-          >
-            <XMarkIcon className="w-5 h-5" />
-          </button>
-        </div>
-      );
-    }
-
     return (
-      <div className="grid grid-cols-6 gap-2 items-start">
-        <div className="space-y-2">
-          <label className="block text-xs text-gray-600">Âge (mois)</label>
-          <div className="grid grid-cols-2 gap-2">
-            <input
-              type="number"
-              placeholder="Min"
-              value={portion.criteria.age?.min || 0}
-              onChange={e => handlePortionChange(index, 'criteria.age.min', Number(e.target.value))}
-              className="px-2 py-1 border rounded text-sm"
-            />
-            <input
-              type="number"
-              placeholder="Max"
-              value={portion.criteria.age?.max || 0}
-              onChange={e => handlePortionChange(index, 'criteria.age.max', Number(e.target.value))}
-              className="px-2 py-1 border rounded text-sm"
-            />
-          </div>
-        </div>
-        <div className="space-y-2 col-span-2">
-          <label className="block text-xs text-gray-600">Poids (kg)</label>
-          <div className="grid grid-cols-2 gap-2">
-            <input
-              type="number"
-              placeholder="Min"
-              value={portion.criteria.weight?.min || 0}
-              onChange={e => handlePortionChange(index, 'criteria.weight.min', Number(e.target.value))}
-              className="px-2 py-1 border rounded text-sm"
-            />
-            <input
-              type="number"
-              placeholder="Max"
-              value={portion.criteria.weight?.max || 0}
-              onChange={e => handlePortionChange(index, 'criteria.weight.max', Number(e.target.value))}
-              className="px-2 py-1 border rounded text-sm"
-            />
-          </div>
-        </div>
-        <div className="col-span-2">
-          <label className="block text-xs text-gray-600">Portion (g/jour)</label>
+      <div className="grid grid-cols-7 gap-2 items-start">
+        <div>
+          <label className="block text-xs text-gray-600">Âge min (mois)</label>
           <input
             type="number"
-            placeholder="g/jour"
-            value={portion.portions.default || 0}
-            onChange={e => handlePortionChange(index, 'portions.default', Number(e.target.value))}
+            placeholder="Âge min"
+            value={portion.criteria.age?.min ?? ''}
+            onChange={(e) => {
+              const value = e.target.value ? Number(e.target.value) : undefined;
+              handlePortionChange(index, 'criteria.age.min', value);
+            }}
+            className="w-full px-2 py-1 border rounded text-sm"
+          />
+        </div>
+        <div>
+          <label className="block text-xs text-gray-600">Âge max (mois)</label>
+          <input
+            type="number"
+            placeholder="Âge max"
+            value={portion.criteria.age?.max ?? ''}
+            onChange={(e) => {
+              const value = e.target.value ? Number(e.target.value) : undefined;
+              handlePortionChange(index, 'criteria.age.max', value);
+            }}
+            className="w-full px-2 py-1 border rounded text-sm"
+          />
+        </div>
+        <div>
+          <label className="block text-xs text-gray-600">Poids min (kg)</label>
+          <input
+            type="number"
+            placeholder="Poids min"
+            value={portion.criteria.weight?.min || 0}
+            onChange={(e) => handlePortionChange(index, 'criteria.weight.min', Number(e.target.value))}
+            className="w-full px-2 py-1 border rounded text-sm"
+          />
+        </div>
+        <div>
+          <label className="block text-xs text-gray-600">Poids max (kg)</label>
+          <input
+            type="number"
+            placeholder="Poids max"
+            value={portion.criteria.weight?.max || 0}
+            onChange={(e) => handlePortionChange(index, 'criteria.weight.max', Number(e.target.value))}
+            className="w-full px-2 py-1 border rounded text-sm"
+          />
+        </div>
+        <div>
+          <label className="block text-xs text-gray-600">Ration min (g/jour)</label>
+          <input
+            type="number"
+            placeholder="Ration min"
+            value={portion.portions.byActivity?.low || 0}
+            onChange={e => handlePortionChange(index, 'portions.byActivity.low', Number(e.target.value))}
+            className="w-full px-2 py-1 border rounded text-sm"
+          />
+        </div>
+        <div>
+          <label className="block text-xs text-gray-600">Ration max (g/jour)</label>
+          <input
+            type="number"
+            placeholder="Ration max"
+            value={portion.portions.byActivity?.moderate || 0}
+            onChange={e => handlePortionChange(index, 'portions.byActivity.moderate', Number(e.target.value))}
             className="w-full px-2 py-1 border rounded text-sm"
           />
         </div>
@@ -432,6 +431,7 @@ export const FoodManagement: React.FC = () => {
                     accept="image/*"
                     onChange={handleTableUpload}
                     className="hidden"
+                    key={Date.now()}
                   />
                   <PhotoIcon className="w-4 h-4" />
                   <span>Importer une image</span>
@@ -465,11 +465,76 @@ export const FoodManagement: React.FC = () => {
                     </div>
                   )}
                   
-                  {portions.map((portion, index) => (
-                    <div key={index} className="bg-white p-3 rounded border">
-                      {renderPortionFields(portion, index)}
+                  {portions.length > 0 && (
+                    <div className="space-y-2">
+                      <div className="grid grid-cols-6 gap-2 px-3 py-2">
+                        <div className="text-xs font-medium text-gray-600">Âge min (mois)</div>
+                        <div className="text-xs font-medium text-gray-600">Âge max (mois)</div>
+                        <div className="text-xs font-medium text-gray-600">Poids min (kg)</div>
+                        <div className="text-xs font-medium text-gray-600">Ration min (g/jour)</div>
+                        <div className="text-xs font-medium text-gray-600">Ration max (g/jour)</div>
+                        <div></div>
+                      </div>
+                      {portions.map((portion, index) => (
+                        <div key={index} className="bg-white p-3 rounded border">
+                          <div className="grid grid-cols-6 gap-2 items-start">
+                            <input
+                              type="number"
+                              placeholder="Âge min"
+                              value={portion.criteria.age?.min ?? ''}
+                              onChange={(e) => {
+                                const value = e.target.value ? Number(e.target.value) : undefined;
+                                handlePortionChange(index, 'criteria.age.min', value);
+                              }}
+                              className="w-full px-2 py-1 border rounded text-sm"
+                            />
+                            <input
+                              type="number"
+                              placeholder="Âge max"
+                              value={portion.criteria.age?.max ?? ''}
+                              onChange={(e) => {
+                                const value = e.target.value ? Number(e.target.value) : undefined;
+                                handlePortionChange(index, 'criteria.age.max', value);
+                              }}
+                              className="w-full px-2 py-1 border rounded text-sm"
+                            />
+                            <input
+                              type="number"
+                              placeholder="Poids min"
+                              value={portion.criteria.weight?.min || 0}
+                              onChange={(e) => {
+                                const value = Number(e.target.value);
+                                handlePortionChange(index, 'criteria.weight.min', value);
+                                handlePortionChange(index, 'criteria.weight.max', value);
+                              }}
+                              className="w-full px-2 py-1 border rounded text-sm"
+                            />
+                            <input
+                              type="number"
+                              placeholder="Ration min"
+                              value={portion.portions.byActivity?.low || 0}
+                              onChange={e => handlePortionChange(index, 'portions.byActivity.low', Number(e.target.value))}
+                              className="w-full px-2 py-1 border rounded text-sm"
+                            />
+                            <input
+                              type="number"
+                              placeholder="Ration max"
+                              value={portion.portions.byActivity?.moderate || 0}
+                              onChange={e => handlePortionChange(index, 'portions.byActivity.moderate', Number(e.target.value))}
+                              className="w-full px-2 py-1 border rounded text-sm"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => handleRemovePortion(index)}
+                              className="p-1 text-gray-400 hover:text-red-600"
+                            >
+                              <XMarkIcon className="w-5 h-5" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                  )}
                   {portions.length === 0 && (
                     <p className="text-center text-gray-500 text-sm py-4">
                       Aucune portion définie. Cliquez sur "Ajouter une ligne" ou importez une image du tableau.
@@ -502,61 +567,21 @@ export const FoodManagement: React.FC = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-lg p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
             <h4 className="text-lg font-medium mb-4">
-              Tableau des rations - {foods.find(f => f.id === showPortionsModal)?.name}
+              Données du tableau - {foods.find(f => f.id === showPortionsModal)?.name}
             </h4>
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead>
-                  <tr>
-                    {foods.find(f => f.id === showPortionsModal)?.portions[0]?.portions.byActivity ? (
-                      <>
-                        <th className="px-4 py-2">Poids (kg)</th>
-                        <th className="px-4 py-2">Activité faible</th>
-                        <th className="px-4 py-2">Activité modérée</th>
-                      </>
-                    ) : (
-                      <>
-                        <th className="px-4 py-2">Âge (mois)</th>
-                        <th className="px-4 py-2">Poids (kg)</th>
-                        <th className="px-4 py-2">Portion (g/jour)</th>
-                      </>
-                    )}
-                  </tr>
-                </thead>
-                <tbody>
-                  {foods
-                    .find(f => f.id === showPortionsModal)
-                    ?.portions.map((portion, index) => (
-                      <tr key={index} className={index % 2 === 0 ? 'bg-gray-50' : ''}>
-                        {portion.portions.byActivity ? (
-                          <>
-                            <td className="px-4 py-2 text-center">
-                              {portion.criteria.weight?.min} - {portion.criteria.weight?.max}
-                            </td>
-                            <td className="px-4 py-2 text-center">
-                              {portion.portions.byActivity.low}
-                            </td>
-                            <td className="px-4 py-2 text-center">
-                              {portion.portions.byActivity.moderate}
-                            </td>
-                          </>
-                        ) : (
-                          <>
-                            <td className="px-4 py-2 text-center">
-                              {portion.criteria.age?.min} - {portion.criteria.age?.max}
-                            </td>
-                            <td className="px-4 py-2 text-center">
-                              {portion.criteria.weight?.min} - {portion.criteria.weight?.max}
-                            </td>
-                            <td className="px-4 py-2 text-center">
-                              {portion.portions.default}
-                            </td>
-                          </>
-                        )}
-                      </tr>
-                    ))}
-                </tbody>
-              </table>
+            <div className="bg-gray-100 p-4 rounded">
+              <pre className="text-sm overflow-x-auto whitespace-pre-wrap">
+                {JSON.stringify(foods
+                  .find(f => f.id === showPortionsModal)
+                  ?.portions.map(portion => ({
+                    ageMin: portion.criteria.age?.min ?? null,
+                    ageMax: portion.criteria.age?.max ?? null,
+                    weightMin: portion.criteria.weight?.min,
+                    weightMax: portion.criteria.weight?.max,
+                    allowanceMin: portion.portions.byActivity?.low,
+                    allowanceMax: portion.portions.byActivity?.moderate
+                  })), null, 2)}
+              </pre>
             </div>
             <div className="mt-4 flex justify-end">
               <button

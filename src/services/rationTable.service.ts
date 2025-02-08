@@ -1,9 +1,21 @@
 import { FoodPortion } from '../types/food';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+
+// Initialiser Gemini AI
+const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY || '');
+const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
 interface OCRResult {
   portions: FoodPortion[];
   type: 'puppy' | 'adult' | 'both';
   rawData?: string;
+  error?: OCRError;
+}
+
+interface OCRError {
+  code: string;
+  message: string;
+  details?: any;
 }
 
 interface RationTableRow {
@@ -13,22 +25,6 @@ interface RationTableRow {
   weightMax: number;
   allowanceMin: number;
   allowanceMax: number;
-}
-
-interface VertexAIResponse {
-  text: string;
-  layout: {
-    textAnchor: {
-      content: string;
-    };
-    boundingPoly: {
-      vertices: Array<{
-        x: number;
-        y: number;
-      }>;
-    };
-    confidence: number;
-  }[];
 }
 
 // Données de test pour simuler l'OCR
@@ -53,199 +49,206 @@ const SAMPLE_DATA: RationTableRow[] = [
 ];
 
 export class RationTableService {
-  private readonly VERTEX_API_ENDPOINT = `https://us-central1-aiplatform.googleapis.com/v1/projects/${process.env.GOOGLE_CLOUD_PROJECT_ID}/locations/us-central1/publishers/google/models/imagetext:predict`;
-  private readonly API_KEY = process.env.GOOGLE_CLOUD_API_KEY;
-
-  constructor() {
-    if (!process.env.GOOGLE_CLOUD_PROJECT_ID || !process.env.GOOGLE_CLOUD_API_KEY) {
-      console.warn('Google Cloud credentials not found in environment variables. OCR functionality will be limited to sample data.');
-    }
-  }
-
-  private async callVertexAI(imageBase64: string): Promise<VertexAIResponse> {
-    if (!process.env.GOOGLE_CLOUD_PROJECT_ID || !process.env.GOOGLE_CLOUD_API_KEY) {
-      // Retourner des données de test si les credentials ne sont pas configurés
-      return this.getMockResponse();
-    }
-
-    const response = await fetch(this.VERTEX_API_ENDPOINT, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.API_KEY}`
-      },
-      body: JSON.stringify({
-        instances: [{
-          image: {
-            bytesBase64Encoded: imageBase64.split(',')[1]
-          }
-        }],
-        parameters: {
-          confidenceThreshold: 0.5,
-          maxPredictions: 1
-        }
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error(`Vertex AI API error: ${response.statusText}`);
-    }
-
-    return response.json();
-  }
-
-  private parseTableData(vertexResponse: VertexAIResponse): RationTableRow[] {
-    // Analyser la disposition des éléments pour détecter la structure du tableau
-    const elements = vertexResponse.layout
-      .sort((a, b) => {
-        const aY = a.boundingPoly.vertices[0].y;
-        const bY = b.boundingPoly.vertices[0].y;
-        if (Math.abs(aY - bY) < 10) { // même ligne
-          return a.boundingPoly.vertices[0].x - b.boundingPoly.vertices[0].x;
-        }
-        return aY - bY;
+  private async extractTextFromImage(imageFile: File): Promise<string> {
+    try {
+      const imageBase64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const base64 = reader.result as string;
+          resolve(base64.split(',')[1]);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(imageFile);
       });
 
-    // Regrouper les éléments par ligne
-    const rows: RationTableRow[] = [];
-    let currentRow: string[] = [];
-    let lastY = 0;
+      const prompt = `Extract data from this dog food portion table. For each row, create an entry with the weight and portions. Return ONLY a JSON array like this:
+[
+  {
+    "ageMin": null,
+    "ageMax": null,
+    "weightMin": 5,
+    "weightMax": 5,
+    "allowanceMin": 90,
+    "allowanceMax": 100
+  }
+]
 
-    elements.forEach(element => {
-      const y = element.boundingPoly.vertices[0].y;
-      if (Math.abs(y - lastY) > 10 && currentRow.length > 0) {
-        // Nouvelle ligne détectée
-        this.processRow(currentRow, rows);
-        currentRow = [];
+Important rules:
+1. Each weight value should be the same for min and max (if weight is 5, then weightMin = 5 and weightMax = 5)
+2. For adult dogs, set ageMin and ageMax to null
+3. Low activity portions go in allowanceMin
+4. Moderate activity portions go in allowanceMax
+5. All numbers must be numeric values (not strings)
+6. Return ONLY the JSON array, no other text
+7. Do not add any markdown formatting`;
+      
+      const result = await model.generateContent([
+        prompt,
+        {
+          inlineData: {
+            mimeType: imageFile.type,
+            data: imageBase64
+          }
+        }
+      ]);
+
+      const response = await result.response;
+      return response.text();
+    } catch (error) {
+      console.error('Erreur lors de l\'extraction du texte:', error);
+      throw {
+        code: 'EXTRACTION_ERROR',
+        message: 'Erreur lors de l\'extraction du texte de l\'image',
+        details: error
+      };
+    }
+  }
+
+  private parseGeminiResponse(text: string): RationTableRow[] {
+    try {
+      // Nettoyer la réponse de tout texte superflu et des backticks markdown
+      const cleanText = text.replace(/```json\n|\n```|```/g, '').trim();
+      console.log('Clean text after removing markdown:', cleanText);
+      
+      try {
+        const jsonData = JSON.parse(cleanText);
+        console.log('Parsed JSON data:', jsonData);
+
+        if (!Array.isArray(jsonData)) {
+          console.warn('Parsed data is not an array');
+          return [];
+        }
+
+        const validRows = jsonData.filter(row => {
+          console.log('Validating row:', row);
+          const isValid = 
+            typeof row.weightMin === 'number' &&
+            typeof row.weightMax === 'number' &&
+            typeof row.allowanceMin === 'number' &&
+            typeof row.allowanceMax === 'number' &&
+            row.weightMin > 0 &&
+            row.weightMax > 0 &&
+            row.allowanceMin > 0 &&
+            row.allowanceMax > 0;
+
+          console.log('Row validation result:', isValid);
+
+          // Pour les chiens adultes, ageMin et ageMax doivent être null
+          if (row.ageMin === null && row.ageMax === null) {
+            return isValid;
+          }
+
+          // Pour les chiots, ageMin et ageMax doivent être des nombres positifs
+          if (row.ageMin !== null && row.ageMax !== null) {
+            const isValidWithAge = isValid &&
+              typeof row.ageMin === 'number' &&
+              typeof row.ageMax === 'number' &&
+              row.ageMin > 0 &&
+              row.ageMax > 0;
+            console.log('Row validation with age result:', isValidWithAge);
+            return isValidWithAge;
+          }
+
+          return false; // Invalide si un seul des champs d'âge est null
+        });
+
+        console.log('Valid rows:', validRows);
+        return validRows;
+      } catch (parseError) {
+        console.error('Error parsing JSON:', parseError);
+        return [];
       }
-      currentRow.push(element.textAnchor.content);
-      lastY = y;
-    });
-
-    // Traiter la dernière ligne
-    if (currentRow.length > 0) {
-      this.processRow(currentRow, rows);
+    } catch (error) {
+      console.error('Erreur lors de l\'analyse de la réponse:', error);
+      return [];
     }
-
-    return rows;
-  }
-
-  private processRow(cells: string[], rows: RationTableRow[]) {
-    // Détecter si c'est une ligne d'en-tête
-    if (cells.some(cell => cell.toLowerCase().includes('age') || 
-                         cell.toLowerCase().includes('poids') || 
-                         cell.toLowerCase().includes('ration'))) {
-      return;
-    }
-
-    // Extraire les valeurs numériques
-    const numbers = cells.map(cell => {
-      const matches = cell.match(/\d+(?:\.\d+)?/g);
-      return matches ? matches.map(Number) : null;
-    });
-
-    // Détecter si c'est une ligne pour chiot (avec âge) ou adulte
-    const hasAge = numbers[0]?.length === 1 || numbers[0]?.length === 2;
-
-    const row: RationTableRow = {
-      weightMin: 0,
-      weightMax: 0,
-      allowanceMin: 0,
-      allowanceMax: 0
-    };
-
-    if (hasAge) {
-      row.ageMin = numbers[0]?.[0] || 0;
-      row.ageMax = numbers[0]?.[1] || row.ageMin;
-      row.weightMin = numbers[1]?.[0] || 0;
-      row.weightMax = numbers[1]?.[1] || 0;
-      row.allowanceMin = numbers[2]?.[0] || 0;
-      row.allowanceMax = numbers[2]?.[1] || row.allowanceMin;
-    } else {
-      row.weightMin = numbers[0]?.[0] || 0;
-      row.weightMax = numbers[0]?.[1] || 0;
-      row.allowanceMin = numbers[1]?.[0] || 0;
-      row.allowanceMax = numbers[1]?.[1] || row.allowanceMin;
-    }
-
-    if (row.weightMin > 0 && row.allowanceMin > 0) {
-      rows.push(row);
-    }
-  }
-
-  private getMockResponse(): VertexAIResponse {
-    // Simuler une réponse Vertex AI avec les données de test
-    return {
-      text: "Tableau de rations",
-      layout: SAMPLE_DATA.map((row, index) => ({
-        textAnchor: {
-          content: Object.values(row).join(" ")
-        },
-        boundingPoly: {
-          vertices: [
-            { x: 0, y: index * 20 },
-            { x: 100, y: index * 20 },
-            { x: 100, y: (index + 1) * 20 },
-            { x: 0, y: (index + 1) * 20 }
-          ]
-        },
-        confidence: 0.95
-      }))
-    };
   }
 
   async extractFromImage(imageFile: File): Promise<OCRResult> {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
+    if (!imageFile) {
+      throw new Error('No image file provided');
+    }
+
+    try {
+      // Forcer un nouveau traitement à chaque appel
+      const timestamp = Date.now();
+      console.log(`Starting OCR processing for image at ${timestamp}`);
       
-      reader.onloadend = async () => {
-        try {
-          const imageBase64 = reader.result as string;
-          const vertexResponse = await this.callVertexAI(imageBase64);
-          const tableData = this.parseTableData(vertexResponse);
+      const extractedText = await this.extractTextFromImage(imageFile);
+      console.log('Extracted text:', extractedText);
+      
+      const tableData = this.parseGeminiResponse(extractedText);
+      console.log('Parsed table data:', tableData);
 
-          const portions: FoodPortion[] = tableData.map(row => ({
-            criteria: {
-              weight: {
-                min: row.weightMin,
-                max: row.weightMax
-              },
-              ...(row.ageMin !== undefined && {
-                age: {
-                  min: row.ageMin,
-                  max: row.ageMax || row.ageMin
-                }
-              })
-            },
-            portions: {
-              default: (row.allowanceMin + row.allowanceMax) / 2,
-              byActivity: row.ageMin === undefined ? {
-                low: row.allowanceMin,
-                moderate: row.allowanceMax
-              } : undefined
-            }
-          }));
+      // Si aucune donnée n'a été extraite, on lance une erreur
+      if (tableData.length === 0) {
+        throw new Error('NO_DATA_EXTRACTED');
+      }
 
-          const type = portions.some(p => p.criteria.age) ? 
-            (portions.some(p => !p.criteria.age) ? 'both' : 'puppy') : 
-            'adult';
+      // Déterminer le type en fonction des données
+      const hasPuppyData = tableData.some(row => row.ageMin !== undefined && row.ageMax !== undefined);
+      const hasAdultData = tableData.some(row => row.ageMin === undefined && row.ageMax === undefined);
+      
+      const type = hasPuppyData && hasAdultData ? 'both' : 
+                   hasPuppyData ? 'puppy' : 'adult';
 
-          resolve({
-            type,
-            portions,
-            rawData: JSON.stringify(tableData, null, 2)
-          });
-        } catch (error) {
-          reject(error);
+      return {
+        type,
+        portions: tableData.map(row => this.convertRowToPortion(row)),
+        rawData: JSON.stringify({
+          text: extractedText,
+          tableData,
+          processedAt: timestamp
+        }, null, 2)
+      };
+    } catch (error: any) {
+      console.error('Erreur lors de l\'OCR:', error);
+      
+      // Si aucune donnée n'a été extraite, on retourne les données de test
+      return {
+        type: 'adult',
+        portions: SAMPLE_DATA
+          .filter(row => !row.ageMin)
+          .map(row => this.convertRowToPortion(row)),
+        rawData: JSON.stringify({
+          error: error.message || 'OCR_ERROR',
+          fallbackData: true,
+          timestamp: Date.now()
+        }, null, 2),
+        error: {
+          code: error.code || 'OCR_ERROR',
+          message: error.message || 'Une erreur est survenue lors de la reconnaissance du tableau',
+          details: error
         }
       };
+    }
+  }
 
-      reader.onerror = () => {
-        reject(new Error('Erreur lors de la lecture du fichier'));
+  private convertRowToPortion(row: RationTableRow): FoodPortion {
+    const portion: FoodPortion = {
+      criteria: {
+        weight: {
+          min: row.weightMin,
+          max: row.weightMax
+        }
+      },
+      portions: {
+        default: (row.allowanceMin + row.allowanceMax) / 2,
+        byActivity: {
+          low: row.allowanceMin,
+          moderate: row.allowanceMax
+        }
+      }
+    };
+
+    if (row.ageMin !== undefined && row.ageMax !== undefined) {
+      portion.criteria.age = {
+        min: row.ageMin,
+        max: row.ageMax
       };
+    }
 
-      reader.readAsDataURL(imageFile);
-    });
+    return portion;
   }
 }
 
