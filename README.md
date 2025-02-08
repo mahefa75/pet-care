@@ -327,3 +327,58 @@ Pour toute question ou problème :
    - Heatmaps et analytics
    - A/B testing sur les nouvelles fonctionnalités
    - Feedback utilisateur intégré 
+
+# Configuration de Google Cloud Vertex AI
+
+Pour utiliser la fonctionnalité d'extraction de tableaux de rations à partir d'images, vous devez configurer Google Cloud Vertex AI :
+
+1. Créer un projet Google Cloud :
+   - Allez sur [Google Cloud Console](https://console.cloud.google.com)
+   - Créez un nouveau projet ou sélectionnez un projet existant
+   - Notez l'ID du projet
+
+2. Activer l'API Vertex AI :
+   - Dans la console Google Cloud, accédez à "APIs & Services > Library"
+   - Recherchez "Vertex AI API"
+   - Cliquez sur "Enable"
+
+3. Créer une clé d'API :
+   - Dans la console Google Cloud, accédez à "APIs & Services > Credentials"
+   - Cliquez sur "Create Credentials" et sélectionnez "API key"
+   - Copiez la clé générée
+
+4. Configuration locale :
+   - Copiez le fichier `.env.example` en `.env`
+   - Remplacez `your-project-id` par l'ID de votre projet Google Cloud
+   - Remplacez `your-api-key` par la clé API générée
+
+5. Sécurité :
+   - Dans la console Google Cloud, restreignez la clé API aux seules APIs nécessaires (Vertex AI)
+   - Ajoutez des restrictions de domaine si nécessaire
+   - N'incluez JAMAIS la clé API dans le contrôle de version
+
+## Fonctionnalités
+
+### Extraction de tableaux de rations
+
+Le service utilise Google Cloud Vertex AI pour extraire automatiquement les données des tableaux de rations à partir d'images. Il peut gérer :
+
+- Tableaux de rations pour chiots (avec âge)
+- Tableaux de rations pour adultes
+- Formats mixtes
+
+Les données extraites sont automatiquement structurées selon le format :
+```typescript
+interface RationTableRow {
+  ageMin?: number;    // Optionnel, pour les chiots
+  ageMax?: number;    // Optionnel, pour les chiots
+  weightMin: number;  // Poids minimum
+  weightMax: number;  // Poids maximum
+  allowanceMin: number; // Ration minimale
+  allowanceMax: number; // Ration maximale
+}
+```
+
+## Licence
+
+Ce projet est sous licence MIT. Voir le fichier `LICENSE` pour plus de détails. 

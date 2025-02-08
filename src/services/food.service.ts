@@ -1,5 +1,6 @@
 import { Pet } from '../types/pet';
 import { WeightService } from './weight.service';
+import { Food } from '../types/food';
 
 interface FoodRecommendation {
   minPortion: number;
@@ -142,4 +143,44 @@ export const getFoodRecommendation = async (pet: Pet): Promise<FoodRecommendatio
   }
 
   return null;
-}; 
+};
+
+const FOODS_STORAGE_KEY = 'pet_care_foods';
+
+class FoodService {
+  private getFoodsFromStorage(): Food[] {
+    const storedFoods = localStorage.getItem(FOODS_STORAGE_KEY);
+    return storedFoods ? JSON.parse(storedFoods) : [];
+  }
+
+  private saveFoodsToStorage(foods: Food[]): void {
+    localStorage.setItem(FOODS_STORAGE_KEY, JSON.stringify(foods));
+  }
+
+  getAllFoods(): Food[] {
+    return this.getFoodsFromStorage();
+  }
+
+  addFood(food: Food): void {
+    const foods = this.getFoodsFromStorage();
+    foods.push(food);
+    this.saveFoodsToStorage(foods);
+  }
+
+  updateFood(updatedFood: Food): void {
+    const foods = this.getFoodsFromStorage();
+    const index = foods.findIndex(food => food.id === updatedFood.id);
+    if (index !== -1) {
+      foods[index] = updatedFood;
+      this.saveFoodsToStorage(foods);
+    }
+  }
+
+  deleteFood(foodId: string): void {
+    const foods = this.getFoodsFromStorage();
+    const filteredFoods = foods.filter(food => food.id !== foodId);
+    this.saveFoodsToStorage(filteredFoods);
+  }
+}
+
+export const foodService = new FoodService(); 

@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { DataBackup } from '../components/Settings/DataBackup';
+import { FoodManagement } from '../components/Settings/FoodManagement';
 
 export const SettingsPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('backup');
 
   const tabs = [
     { id: 'backup', label: 'Sauvegarde des données' },
+    { id: 'food', label: 'Alimentations' },
     { id: 'general', label: 'Général' },
   ];
 
@@ -36,6 +38,11 @@ export const SettingsPage: React.FC = () => {
         {activeTab === 'backup' && (
           <div className="bg-white rounded-lg p-6 shadow-sm">
             <DataBackup />
+          </div>
+        )}
+        {activeTab === 'food' && (
+          <div className="bg-white rounded-lg p-6 shadow-sm">
+            <FoodManagement />
           </div>
         )}
         {activeTab === 'general' && (
