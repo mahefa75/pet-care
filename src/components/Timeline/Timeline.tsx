@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { format, subMonths, isAfter } from 'date-fns';
+import { format, isAfter, subWeeks } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { groomingService, GroomingRecord } from '../../services/grooming.service';
 import { healthEventService, HealthEvent } from '../../services/healthEvent.service';
 import { PetService } from '../../services/pet.service';
 import { Pet } from '../../types/pet';
 import { Offcanvas } from '../UI/Offcanvas';
-import { PencilIcon } from '@heroicons/react/24/outline';
+import { PencilIcon, SparklesIcon, BoltIcon } from '@heroicons/react/24/outline';
 
 interface TimelineEvent {
   id: string;
@@ -16,6 +16,7 @@ interface TimelineEvent {
   description: string;
   petId: string;
   petName?: string;
+  petPhotoUrl?: string;
   // Champs spécifiques au toilettage
   types?: string[];
   nextAppointment?: Date;
@@ -87,7 +88,8 @@ export const Timeline: React.FC<TimelineProps> = ({ petId, months = 2 }) => {
         ? await healthEventService.getHealthEventsByPetId(petId)
         : await healthEventService.getAllHealthEvents();
 
-      const limitDate = subMonths(new Date(), months);
+      // Utiliser 2 semaines comme limite au lieu de months
+      const limitDate = subWeeks(new Date(), 2);
 
       // Combiner tous les événements
       const allEvents = [
@@ -104,10 +106,11 @@ export const Timeline: React.FC<TimelineProps> = ({ petId, months = 2 }) => {
               id: record.id,
               date: new Date(record.date),
               type: 'grooming' as const,
-              title: `Toilettage - ${typeLabels}`,
+              title: `${typeLabels}`,
               description: record.description,
               petId: record.petId,
               petName: petsMap[record.petId]?.name,
+              petPhotoUrl: petsMap[record.petId]?.photoUrl,
               types: types,
               nextAppointment: record.nextAppointment,
               provider: record.provider
@@ -119,10 +122,11 @@ export const Timeline: React.FC<TimelineProps> = ({ petId, months = 2 }) => {
             id: event.id,
             date: new Date(event.date),
             type: 'health' as const,
-            title: `Événement santé - ${event.type}`,
+            title: `${event.type}`,
             description: event.description,
             petId: event.petId,
             petName: petsMap[event.petId]?.name,
+            petPhotoUrl: petsMap[event.petId]?.photoUrl,
             severity: event.severity,
             notes: event.notes,
             resolved: event.resolved,
@@ -145,7 +149,7 @@ export const Timeline: React.FC<TimelineProps> = ({ petId, months = 2 }) => {
 
       // Convertir en tableau et trier par date
       const sortedGroups = Object.values(eventsByDate).sort(
-        (a, b) => a.date.getTime() - b.date.getTime()
+        (a, b) => b.date.getTime() - a.date.getTime()
       );
 
       setGroupedEvents(sortedGroups);
@@ -213,43 +217,35 @@ export const Timeline: React.FC<TimelineProps> = ({ petId, months = 2 }) => {
   if (groupedEvents.length === 0) {
     return (
       <div className="text-center py-8 text-gray-500">
-        Aucun événement sur les {months} derniers mois
+        Aucun événement sur les 2 dernières semaines
       </div>
     );
   }
 
   return (
-    <div className="bg-white p-4">
-      {/* Timeline */}
+    <div className="bg-white p-2">
+      {/* Timeline verticale */}
       <div className="relative">
-        {/* Ligne horizontale */}
-        <div className="absolute left-0 right-0 h-[1px] bg-gray-200" style={{ top: '60px' }} />
-        
-        {/* Points et dates */}
-        <div className="relative flex justify-between items-start min-h-[200px] pt-[60px]">
-          {groupedEvents.map((group, index) => (
+        {/* Ligne verticale */}
+        <div className="absolute left-0 top-0 bottom-0 w-[1px] bg-blue-500" />
+
+        {/* Points et événements */}
+        <div className="relative space-y-8">
+          {groupedEvents.map((group) => (
             <div
               key={format(group.date, 'yyyy-MM-dd')}
-              className="relative flex flex-col items-center"
-              style={{ flex: 1 }}
+              className="relative pl-4"
             >
-              {/* Point */}
-              <div className="w-4 h-4 rounded-full bg-blue-500" style={{ marginTop: '-8px' }} />
-
-              {/* Date */}
-              <div className="text-xs text-gray-600 mt-0">
-                {format(group.date, 'dd/MM/yyyy', { locale: fr })}
+              {/* Point et date */}
+              <div className="absolute left-0 -translate-x-[7px] flex items-center">
+                <div className="w-4 h-4 rounded-full bg-blue-500 ring-4 ring-blue-200" />
+                <div className="ml-2 text-sm text-gray-600 whitespace-nowrap font-medium">
+                  {format(group.date, 'dd/MM/yyyy', { locale: fr })}
+                </div>
               </div>
 
-              {/* Ligne verticale */}
-              <div className={`absolute w-[1px] bg-gray-200 ${
-                index % 2 === 0 ? '-top-[50px]' : 'top-[20px]'
-              }`} style={{ height: '40px' }} />
-
               {/* Événements */}
-              <div className={`absolute w-auto space-y-2 left-[50%] ${
-                index % 2 === 0 ? '-top-[100px]' : 'top-[60px]'
-              }`}>
+              <div className="space-y-2 pt-8">
                 {group.events.map(event => (
                   <div
                     key={event.id}
@@ -265,7 +261,32 @@ export const Timeline: React.FC<TimelineProps> = ({ petId, months = 2 }) => {
                     }`}
                   >
                     <div className="text-sm font-medium flex items-center justify-between gap-2">
-                      <span>{event.petName} - {event.title}</span>
+                      <div className="flex items-center gap-2">
+                        {event.petPhotoUrl ? (
+                          <img 
+                            src={event.petPhotoUrl} 
+                            alt={event.petName} 
+                            className="w-8 h-8 rounded-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
+                            <span className="text-xs text-gray-500">
+                              {event.petName?.charAt(0)}
+                            </span>
+                          </div>
+                        )}
+                        <div className="flex flex-col">
+                          <span className="font-medium">{event.petName}</span>
+                          <div className="flex items-center gap-1">
+                            {event.type === 'grooming' ? (
+                              <SparklesIcon className="h-4 w-4 text-blue-500" />
+                            ) : (
+                              <BoltIcon className="h-4 w-4 text-red-500" />
+                            )}
+                            <span>{event.title}</span>
+                          </div>
+                        </div>
+                      </div>
                       <button
                         onClick={(e) => handleEditEvent(event, e)}
                         className="p-1 text-gray-400 hover:text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity"
