@@ -1,8 +1,8 @@
-import { db } from '../config/db';
+import { db } from '../lib/db';
 
 export interface GroomingRecord {
-  id: string;
-  petId: string;
+  id?: number;
+  petId: number;
   date: Date;
   type: string; // 'bath', 'nail_trimming', 'ear_cleaning', 'flea_treatment', etc.
   description: string;
@@ -12,13 +12,11 @@ export interface GroomingRecord {
 
 export const groomingService = {
   async addGroomingRecord(record: Omit<GroomingRecord, 'id'>): Promise<GroomingRecord> {
-    const id = crypto.randomUUID();
-    const newRecord = { ...record, id };
-    await db.grooming.add(newRecord);
-    return newRecord;
+    const id = await db.grooming.add(record);
+    return { ...record, id };
   },
 
-  async getGroomingRecordsByPetId(petId: string): Promise<GroomingRecord[]> {
+  async getGroomingRecordsByPetId(petId: number): Promise<GroomingRecord[]> {
     return await db.grooming.where('petId').equals(petId).toArray();
   },
 
@@ -26,11 +24,11 @@ export const groomingService = {
     return await db.grooming.toArray();
   },
 
-  async updateGroomingRecord(id: string, updates: Partial<GroomingRecord>): Promise<void> {
+  async updateGroomingRecord(id: number, updates: Partial<GroomingRecord>): Promise<void> {
     await db.grooming.update(id, updates);
   },
 
-  async deleteGroomingRecord(id: string): Promise<void> {
+  async deleteGroomingRecord(id: number): Promise<void> {
     await db.grooming.delete(id);
   },
 

@@ -6,13 +6,13 @@ import { PetService } from '../../services/pet.service';
 import { Pet } from '../../types/pet';
 
 interface GroomingHistoryProps {
-  petId?: string;
+  petId?: number;
   onUpdate?: () => void;
 }
 
 export const GroomingHistory: React.FC<GroomingHistoryProps> = ({ petId, onUpdate }) => {
   const [records, setRecords] = useState<GroomingRecord[]>([]);
-  const [pets, setPets] = useState<Record<string, Pet>>({});
+  const [pets, setPets] = useState<Record<number, Pet>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -30,9 +30,9 @@ export const GroomingHistory: React.FC<GroomingHistoryProps> = ({ petId, onUpdat
       const petService = new PetService();
       const allPets = await petService.getPets({ page: 1, limit: 1000 });
       const petsMap = allPets.reduce((acc, pet) => {
-        acc[pet.id.toString()] = pet;
+        acc[pet.id] = pet;
         return acc;
-      }, {} as Record<string, Pet>);
+      }, {} as Record<number, Pet>);
       setPets(petsMap);
     } catch (err) {
       console.error('Error loading pets:', err);
@@ -66,7 +66,7 @@ export const GroomingHistory: React.FC<GroomingHistoryProps> = ({ petId, onUpdat
     loadGroomingHistory();
   }, [petId]);
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: number) => {
     if (window.confirm('Êtes-vous sûr de vouloir supprimer cet enregistrement ?')) {
       try {
         await groomingService.deleteGroomingRecord(id);
@@ -121,7 +121,7 @@ export const GroomingHistory: React.FC<GroomingHistoryProps> = ({ petId, onUpdat
                     {format(new Date(record.date), 'dd/MM/yyyy', { locale: fr })}
                   </div>
                   <button
-                    onClick={() => handleDelete(record.id)}
+                    onClick={() => record.id && handleDelete(record.id)}
                     className="text-gray-400 hover:text-red-600"
                   >
                     <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -9,12 +9,12 @@ import { Offcanvas } from '../UI/Offcanvas';
 import { PencilIcon, SparklesIcon, BoltIcon } from '@heroicons/react/24/outline';
 
 interface TimelineEvent {
-  id: string;
+  id: number;
   date: Date;
   type: 'grooming' | 'health';
   title: string;
   description: string;
-  petId: string;
+  petId: number;
   petName?: string;
   petPhotoUrl?: string;
   // Champs spécifiques au toilettage
@@ -34,7 +34,7 @@ interface GroupedEvents {
 }
 
 interface TimelineProps {
-  petId?: string;
+  petId?: number;
   months?: number;
 }
 
@@ -75,9 +75,9 @@ export const Timeline: React.FC<TimelineProps> = ({ petId, months = 2 }) => {
       const petService = new PetService();
       const allPets = await petService.getPets({ page: 1, limit: 1000 });
       const petsMap = allPets.reduce((acc, pet) => {
-        acc[pet.id.toString()] = pet;
+        acc[pet.id] = pet;
         return acc;
-      }, {} as Record<string, Pet>);
+      }, {} as Record<number, Pet>);
 
       // Charger les événements
       const groomingRecords = petId
@@ -103,7 +103,7 @@ export const Timeline: React.FC<TimelineProps> = ({ petId, months = 2 }) => {
               .join(', ');
             
             return {
-              id: record.id,
+              id: record.id!,
               date: new Date(record.date),
               type: 'grooming' as const,
               title: `${typeLabels}`,
@@ -119,7 +119,7 @@ export const Timeline: React.FC<TimelineProps> = ({ petId, months = 2 }) => {
         ...healthEvents
           .filter(event => isAfter(new Date(event.date), limitDate))
           .map((event: HealthEvent) => ({
-            id: event.id,
+            id: event.id!,
             date: new Date(event.date),
             type: 'health' as const,
             title: `${event.type}`,
@@ -177,11 +177,10 @@ export const Timeline: React.FC<TimelineProps> = ({ petId, months = 2 }) => {
 
     try {
       if (editingEvent.type === 'grooming') {
-        // Pour le toilettage, on met à jour l'enregistrement avec tous les types sélectionnés
         await groomingService.updateGroomingRecord(editingEvent.id, {
           description: editingEvent.description,
           date: editingEvent.date,
-          type: editingEvent.types?.join(',') || '', // Stocker tous les types sélectionnés
+          type: editingEvent.types?.join(',') || '',
           nextAppointment: editingEvent.nextAppointment,
           provider: editingEvent.provider
         });

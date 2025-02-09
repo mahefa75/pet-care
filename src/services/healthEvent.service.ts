@@ -1,8 +1,8 @@
-import { db } from '../config/db';
+import { db } from '../lib/db';
 
 export interface HealthEvent {
-  id: string;
-  petId: string;
+  id?: number;
+  petId: number;
   date: Date;
   type: string; // 'illness', 'injury', 'behavior_change', 'other'
   description: string;
@@ -14,13 +14,11 @@ export interface HealthEvent {
 
 export const healthEventService = {
   async addHealthEvent(event: Omit<HealthEvent, 'id'>): Promise<HealthEvent> {
-    const id = crypto.randomUUID();
-    const newEvent = { ...event, id };
-    await db.healthEvents.add(newEvent);
-    return newEvent;
+    const id = await db.healthEvents.add(event);
+    return { ...event, id };
   },
 
-  async getHealthEventsByPetId(petId: string): Promise<HealthEvent[]> {
+  async getHealthEventsByPetId(petId: number): Promise<HealthEvent[]> {
     return await db.healthEvents.where('petId').equals(petId).toArray();
   },
 
@@ -28,18 +26,17 @@ export const healthEventService = {
     return await db.healthEvents.toArray();
   },
 
-  async updateHealthEvent(id: string, updates: Partial<HealthEvent>): Promise<void> {
+  async updateHealthEvent(id: number, updates: Partial<HealthEvent>): Promise<void> {
     await db.healthEvents.update(id, updates);
   },
 
-  async deleteHealthEvent(id: string): Promise<void> {
+  async deleteHealthEvent(id: number): Promise<void> {
     await db.healthEvents.delete(id);
   },
 
   async getActiveHealthEvents(): Promise<HealthEvent[]> {
     return await db.healthEvents
-      .where('resolved')
-      .equals(false)
+      .filter(event => !event.resolved)
       .toArray();
   }
 }; 

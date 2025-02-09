@@ -7,7 +7,8 @@ import { useParams } from 'react-router-dom';
 import { Offcanvas } from '../components/UI/Offcanvas';
 
 export const PetHealthPage: React.FC = () => {
-  const { petId } = useParams<{ petId: string }>();
+  const { petId: petIdString } = useParams<{ petId: string }>();
+  const petId = petIdString ? parseInt(petIdString) : undefined;
   const [activeForm, setActiveForm] = useState<'grooming' | 'health' | null>(null);
   const [historyKey, setHistoryKey] = useState(0); // Pour forcer le rechargement de l'historique
 
@@ -66,7 +67,7 @@ export const PetHealthPage: React.FC = () => {
         size="xl"
       >
         <AddGroomingForm
-          petId={petId}
+          petId={petIdString}
           onSuccess={handleFormSuccess}
           onCancel={() => setActiveForm(null)}
         />
@@ -79,7 +80,7 @@ export const PetHealthPage: React.FC = () => {
         size="xl"
       >
         <AddHealthEventForm
-          petId={petId}
+          petId={petIdString}
           onSuccess={handleFormSuccess}
           onCancel={() => setActiveForm(null)}
         />

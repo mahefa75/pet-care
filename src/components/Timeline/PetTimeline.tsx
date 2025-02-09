@@ -5,7 +5,7 @@ import { GroomingRecord, groomingService } from '../../services/grooming.service
 import { HealthEvent, healthEventService } from '../../services/healthEvent.service';
 
 interface TimelineEvent {
-  id: string;
+  id: number;
   date: Date;
   type: 'grooming' | 'health';
   title: string;
@@ -15,7 +15,7 @@ interface TimelineEvent {
 }
 
 interface PetTimelineProps {
-  petId?: string; // Optional: if not provided, show timeline for all pets
+  petId?: number;
 }
 
 export const PetTimeline: React.FC<PetTimelineProps> = ({ petId }) => {
@@ -38,7 +38,7 @@ export const PetTimeline: React.FC<PetTimelineProps> = ({ petId }) => {
         // Convert to timeline events
         const timelineEvents: TimelineEvent[] = [
           ...groomingRecords.map((record: GroomingRecord) => ({
-            id: record.id,
+            id: record.id!,
             date: record.date,
             type: 'grooming' as const,
             title: `Toilettage - ${record.type}`,
@@ -46,7 +46,7 @@ export const PetTimeline: React.FC<PetTimelineProps> = ({ petId }) => {
             icon: '🛁'
           })),
           ...healthEvents.map((event: HealthEvent) => ({
-            id: event.id,
+            id: event.id!,
             date: event.date,
             type: 'health' as const,
             title: `Événement santé - ${event.type}`,

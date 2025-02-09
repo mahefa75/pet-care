@@ -18,7 +18,7 @@ import { WeightService } from '../services/weight.service';
 import { PetService } from '../services/pet.service';
 import { Pet, WeightMeasurement } from '../types/pet';
 import { UpcomingReminders } from '../components/Treatment/UpcomingReminders';
-import { CalendarIcon } from '@heroicons/react/24/outline';
+import { CalendarIcon, ChartBarIcon, PresentationChartLineIcon } from '@heroicons/react/24/outline';
 import { GroupedFoodRecommendation } from '../components/Pet/FoodRecommendation';
 import { BulkWeightEntry } from '../components/Weight/BulkWeightEntry';
 import { Button } from '../components/UI/Button';
@@ -224,14 +224,26 @@ export const DashboardPage: React.FC = () => {
             <div className="flex justify-between items-center mb-8">
               <div className="flex items-center gap-4">
                 <h2 className="text-xl font-semibold text-gray-900">Suivi des poids</h2>
-                <select
-                  value={chartType}
-                  onChange={(e) => setChartType(e.target.value as 'line' | 'bar')}
-                  className="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                >
-                  <option value="line">Ligne</option>
-                  <option value="bar">Barre</option>
-                </select>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setChartType('line')}
+                    className={`p-2 rounded-md hover:bg-gray-100 transition-colors ${
+                      chartType === 'line' ? 'bg-gray-100 text-blue-600' : 'text-gray-600'
+                    }`}
+                    title="Graphique en ligne"
+                  >
+                    <PresentationChartLineIcon className="h-5 w-5" />
+                  </button>
+                  <button
+                    onClick={() => setChartType('bar')}
+                    className={`p-2 rounded-md hover:bg-gray-100 transition-colors ${
+                      chartType === 'bar' ? 'bg-gray-100 text-blue-600' : 'text-gray-600'
+                    }`}
+                    title="Graphique en barres"
+                  >
+                    <ChartBarIcon className="h-5 w-5" />
+                  </button>
+                </div>
               </div>
               <Button
                 onClick={() => setIsBulkWeightEntryOpen(true)}

@@ -17,6 +17,7 @@ export interface WeightMeasurement {
   weight: number;
   date: Date;
   notes?: string;
+  foods?: number[]; // IDs of associated foods
 }
 
 export interface Pet {
