@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
+import { Button, Alert, CircularProgress, Box, Typography, Divider } from '@mui/material';
 import { backupService } from '../../services/backup.service';
+import { migrationService } from '../../services/migration.service';
 
 export const DataBackup: React.FC = () => {
   const [importStatus, setImportStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [exportStatus, setExportStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [migrationStatus, setMigrationStatus] = useState<'idle' | 'migrating' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState<string>('');
 
   const handleExport = async () => {
@@ -40,6 +43,30 @@ export const DataBackup: React.FC = () => {
     }
   };
 
+  const handleMigration = async () => {
+    try {
+      setMigrationStatus('migrating');
+      setErrorMessage('');
+
+      // Effectuer la migration
+      await migrationService.migrateAllData();
+      
+      // Nettoyer les anciennes bases de données
+      await migrationService.cleanupOldDatabases();
+
+      setMigrationStatus('success');
+      
+      // Recharger la page après un court délai pour montrer le message de succès
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
+    } catch (error) {
+      console.error('Erreur lors de la migration:', error);
+      setMigrationStatus('error');
+      setErrorMessage(error instanceof Error ? error.message : 'Erreur lors de la migration des données');
+    }
+  };
+
   const handleImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
     try {
       setImportStatus('idle');
@@ -73,58 +100,115 @@ export const DataBackup: React.FC = () => {
   };
 
   return (
-    <div className="p-6 bg-white rounded-lg shadow-sm">
-      <h2 className="text-2xl font-semibold mb-6">Sauvegarde des données</h2>
-      
-      <div className="space-y-8">
-        {/* Export Section */}
-        <div>
-          <h3 className="text-lg font-medium mb-3">Exporter les données</h3>
-          <p className="text-gray-600 mb-4">
-            Téléchargez une copie de toutes vos données pour les sauvegarder.
-          </p>
-          <button
-            onClick={handleExport}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
-          >
-            Exporter les données
-          </button>
-          {exportStatus === 'success' && (
-            <p className="mt-2 text-green-600">Export réussi !</p>
-          )}
-        </div>
+    <Box>
+      <Typography variant="h6" gutterBottom>
+        Sauvegarde et Migration des Données
+      </Typography>
 
-        {/* Import Section */}
-        <div>
-          <h3 className="text-lg font-medium mb-3">Importer des données</h3>
-          <p className="text-gray-600 mb-4">
-            Restaurez vos données à partir d'une sauvegarde précédente.
-            <br />
-            <span className="text-amber-600">
-              Attention : Cette action remplacera toutes les données existantes.
-            </span>
-          </p>
-          <label className="inline-block px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors cursor-pointer">
-            <input
-              type="file"
-              accept=".json"
-              onChange={handleImport}
-              className="hidden"
-            />
-            Importer une sauvegarde
-          </label>
-          {importStatus === 'success' && (
-            <p className="mt-2 text-green-600">Import réussi !</p>
-          )}
-        </div>
+      {/* Section Sauvegarde */}
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="subtitle1" gutterBottom>
+          Sauvegarde
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          Exportez vos données pour les sauvegarder en toute sécurité.
+        </Typography>
 
-        {/* Error Display */}
-        {errorMessage && (
-          <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-md">
-            <p className="text-red-600">{errorMessage}</p>
-          </div>
+        {exportStatus === 'success' && (
+          <Alert severity="success" sx={{ mb: 2 }}>
+            Export réussi !
+          </Alert>
+        )}
+
+        {exportStatus === 'error' && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {errorMessage}
+          </Alert>
+        )}
+
+        <Button
+          variant="contained"
+          onClick={handleExport}
+          disabled={exportStatus !== 'idle'}
+          sx={{ mr: 2 }}
+        >
+          Exporter les données
+        </Button>
+      </Box>
+
+      <Divider sx={{ my: 4 }} />
+
+      {/* Section Migration */}
+      <Box>
+        <Typography variant="subtitle1" gutterBottom>
+          Migration des Bases de Données
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          Cette opération va consolider toutes les bases de données locales en une seule.
+          Il est fortement recommandé de faire une sauvegarde avant de procéder.
+        </Typography>
+
+        {migrationStatus === 'migrating' && (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+            <CircularProgress size={20} />
+            <Typography>Migration en cours...</Typography>
+          </Box>
+        )}
+
+        {migrationStatus === 'success' && (
+          <Alert severity="success" sx={{ mb: 2 }}>
+            Migration terminée avec succès !
+          </Alert>
+        )}
+
+        {migrationStatus === 'error' && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {errorMessage}
+          </Alert>
+        )}
+
+        <Button
+          variant="contained"
+          onClick={handleMigration}
+          disabled={migrationStatus === 'migrating'}
+          color="warning"
+        >
+          Démarrer la Migration
+        </Button>
+      </Box>
+
+      <Divider sx={{ my: 4 }} />
+
+      {/* Import Section */}
+      <div>
+        <h3 className="text-lg font-medium mb-3">Importer des données</h3>
+        <p className="text-gray-600 mb-4">
+          Restaurez vos données à partir d'une sauvegarde précédente.
+          <br />
+          <span className="text-amber-600">
+            Attention : Cette action remplacera toutes les données existantes.
+          </span>
+        </p>
+        <label className="inline-block px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors cursor-pointer">
+          <input
+            type="file"
+            accept=".json"
+            onChange={handleImport}
+            className="hidden"
+          />
+          Importer une sauvegarde
+        </label>
+        {importStatus === 'success' && (
+          <p className="mt-2 text-green-600">Import réussi !</p>
         )}
       </div>
-    </div>
+
+      {/* Error Display */}
+      {errorMessage && (
+        <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-md">
+          <p className="text-red-600">{errorMessage}</p>
+        </div>
+      )}
+    </Box>
   );
 }; 

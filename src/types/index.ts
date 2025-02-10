@@ -1,3 +1,5 @@
+export * from './food';
+
 // Types pour les animaux
 export interface Pet {
   id: number;

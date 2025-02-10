@@ -93,28 +93,20 @@ export class WeightService {
     await db.weightMeasurements.delete(id);
   }
 
-  async addWeight(petId: number, data: { date: Date; weight: number }): Promise<WeightMeasurement> {
-    try {
-      // S'assurer que le poids est arrondi à 3 décimales
-      const roundedWeight = Math.round(data.weight * 1000) / 1000;
-      
-      // Ajouter à la base de données et récupérer l'ID généré
-      const id = await db.weightMeasurements.add({
-        petId,
-        date: new Date(data.date),
-        weight: roundedWeight
-      } as any);
-
-      // Retourner l'enregistrement complet
-      return {
-        id,
-        petId,
-        date: new Date(data.date),
-        weight: roundedWeight
-      };
-    } catch (error) {
-      console.error('Erreur lors de l\'ajout du poids:', error);
-      throw new Error('Erreur lors de l\'ajout du poids');
-    }
+  async addWeight(petId: number, data: {
+    date: Date;
+    weight: number;
+    notes?: string;
+    foods?: number[];
+  }): Promise<WeightMeasurement> {
+    const id = await db.weightMeasurements.add({
+      petId,
+      ...data
+    });
+    return {
+      id,
+      petId,
+      ...data
+    };
   }
 } 

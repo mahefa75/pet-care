@@ -1,5 +1,7 @@
 import { Pet } from '../types/pet';
 import { WeightService } from './weight.service';
+import { Food } from '../types/food';
+import { db } from '../lib/db';
 
 interface FoodRecommendation {
   minPortion: number;
@@ -142,4 +144,24 @@ export const getFoodRecommendation = async (pet: Pet): Promise<FoodRecommendatio
   }
 
   return null;
-}; 
+};
+
+class FoodService {
+  async getAllFoods(): Promise<Food[]> {
+    return await db.foods.toArray();
+  }
+
+  async addFood(food: Food): Promise<void> {
+    await db.foods.add(food);
+  }
+
+  async updateFood(updatedFood: Food): Promise<void> {
+    await db.foods.put(updatedFood);
+  }
+
+  async deleteFood(foodId: string): Promise<void> {
+    await db.foods.delete(parseInt(foodId));
+  }
+}
+
+export const foodService = new FoodService(); 

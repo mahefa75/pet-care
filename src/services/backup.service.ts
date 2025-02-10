@@ -10,6 +10,9 @@ export class BackupService {
         treatments: await db.treatments.toArray(),
         reminders: await db.reminders.toArray(),
         weightMeasurements: await db.weightMeasurements.toArray(),
+        grooming: await db.grooming.toArray(),
+        healthEvents: await db.healthEvents.toArray(),
+        foods: await db.foods.toArray()
       };
 
       // Convertir les dates en format ISO pour une meilleure sérialisation
@@ -31,7 +34,7 @@ export class BackupService {
 
       // Vider toutes les tables existantes
       await db.transaction('rw', 
-        [db.pets, db.appointments, db.treatments, db.reminders, db.weightMeasurements], 
+        [db.pets, db.appointments, db.treatments, db.reminders, db.weightMeasurements, db.grooming, db.healthEvents, db.foods], 
         async () => {
           await Promise.all([
             db.pets.clear(),
@@ -39,6 +42,9 @@ export class BackupService {
             db.treatments.clear(),
             db.reminders.clear(),
             db.weightMeasurements.clear(),
+            db.grooming.clear(),
+            db.healthEvents.clear(),
+            db.foods.clear()
           ]);
 
           // Importer les nouvelles données
@@ -48,6 +54,9 @@ export class BackupService {
             db.treatments.bulkAdd(processedBackup.treatments),
             db.reminders.bulkAdd(processedBackup.reminders),
             db.weightMeasurements.bulkAdd(processedBackup.weightMeasurements),
+            db.grooming.bulkAdd(processedBackup.grooming),
+            db.healthEvents.bulkAdd(processedBackup.healthEvents),
+            db.foods.bulkAdd(processedBackup.foods)
           ]);
         }
       );

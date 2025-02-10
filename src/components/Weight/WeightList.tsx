@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { WeightMeasurement } from '../../types/pet';
 import { WeightService } from '../../services/weight.service';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { Food } from '../../types/food';
+import { foodService } from '../../services/food.service';
 
 interface WeightListProps {
   weights: WeightMeasurement[];
@@ -16,6 +18,23 @@ export const WeightList: React.FC<WeightListProps> = ({ weights, onWeightUpdated
   const [editingWeight, setEditingWeight] = useState<WeightMeasurement | null>(null);
   const [newWeight, setNewWeight] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [foodsMap, setFoodsMap] = useState<Record<number, Food>>({});
+
+  useEffect(() => {
+    const loadFoods = async () => {
+      try {
+        const foods = await foodService.getAllFoods();
+        const foodsRecord = foods.reduce((acc, food) => {
+          acc[food.id] = food;
+          return acc;
+        }, {} as Record<number, Food>);
+        setFoodsMap(foodsRecord);
+      } catch (err) {
+        console.error('Erreur lors du chargement des aliments:', err);
+      }
+    };
+    loadFoods();
+  }, []);
 
   const handleEdit = (weight: WeightMeasurement) => {
     setEditingWeight(weight);
@@ -75,7 +94,7 @@ export const WeightList: React.FC<WeightListProps> = ({ weights, onWeightUpdated
                 Poids (kg)
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Notes
+                Aliments & Notes
               </th>
               <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Actions
@@ -103,7 +122,29 @@ export const WeightList: React.FC<WeightListProps> = ({ weights, onWeightUpdated
                   )}
                 </td>
                 <td className="px-6 py-4 text-sm text-gray-500">
-                  {weight.notes || '-'}
+                  <div className="space-y-1">
+                    {weight.foods && weight.foods.length > 0 && (
+                      <div className="flex flex-wrap gap-1">
+                        {weight.foods.map(foodId => {
+                          const food = foodsMap[foodId];
+                          return food ? (
+                            <span
+                              key={food.id}
+                              className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800"
+                            >
+                              {food.name}
+                            </span>
+                          ) : null;
+                        })}
+                      </div>
+                    )}
+                    {weight.notes && (
+                      <p className="text-gray-600">{weight.notes}</p>
+                    )}
+                    {!weight.notes && !weight.foods?.length && (
+                      <span className="text-gray-400">-</span>
+                    )}
+                  </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   {editingWeight?.id === weight.id ? (
