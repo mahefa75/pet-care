@@ -49,14 +49,14 @@ export class BackupService {
 
           // Importer les nouvelles données
           await Promise.all([
-            db.pets.bulkAdd(processedBackup.pets),
-            db.appointments.bulkAdd(processedBackup.appointments),
-            db.treatments.bulkAdd(processedBackup.treatments),
-            db.reminders.bulkAdd(processedBackup.reminders),
-            db.weightMeasurements.bulkAdd(processedBackup.weightMeasurements),
-            db.grooming.bulkAdd(processedBackup.grooming),
-            db.healthEvents.bulkAdd(processedBackup.healthEvents),
-            db.foods.bulkAdd(processedBackup.foods)
+            processedBackup.pets ? db.pets.bulkAdd(processedBackup.pets) : Promise.resolve(),
+            processedBackup.appointments ? db.appointments.bulkAdd(processedBackup.appointments) : Promise.resolve(),
+            processedBackup.treatments ? db.treatments.bulkAdd(processedBackup.treatments) : Promise.resolve(),
+            processedBackup.reminders ? db.reminders.bulkAdd(processedBackup.reminders) : Promise.resolve(),
+            processedBackup.weightMeasurements ? db.weightMeasurements.bulkAdd(processedBackup.weightMeasurements) : Promise.resolve(),
+            processedBackup.grooming ? db.grooming.bulkAdd(processedBackup.grooming) : Promise.resolve(),
+            processedBackup.healthEvents ? db.healthEvents.bulkAdd(processedBackup.healthEvents) : Promise.resolve(),
+            processedBackup.foods ? db.foods.bulkAdd(processedBackup.foods) : Promise.resolve()
           ]);
         }
       );
