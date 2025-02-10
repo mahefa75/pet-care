@@ -13,11 +13,8 @@ export const FoodManagement: React.FC = () => {
   const [showOffcanvas, setShowOffcanvas] = useState(false);
   const [newFood, setNewFood] = useState<Partial<Food>>({});
   const [portions, setPortions] = useState<FoodPortion[]>([]);
-  const [showPortionsTable, setShowPortionsTable] = useState(false);
-  const [tempPhotoFile, setTempPhotoFile] = useState<File | null>(null);
   const [editingFoodId, setEditingFoodId] = useState<string | null>(null);
   const [showPortionsModal, setShowPortionsModal] = useState<string | null>(null);
-  const [isAdultFood, setIsAdultFood] = useState(false);
   const [tableType, setTableType] = useState<TableType>('both');
   const [isProcessingTable, setIsProcessingTable] = useState(false);
   const [ocrRawData, setOcrRawData] = useState<string | null>(null);
@@ -26,13 +23,12 @@ export const FoodManagement: React.FC = () => {
     loadFoods();
   }, []);
 
-  const loadFoods = () => {
-    const loadedFoods = foodService.getAllFoods();
+  const loadFoods = async () => {
+    const loadedFoods = await foodService.getAllFoods();
     setFoods(loadedFoods);
   };
 
   const handlePhotoChange = (file: File | null) => {
-    setTempPhotoFile(file);
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -127,43 +123,52 @@ export const FoodManagement: React.FC = () => {
     setPortions(portions.filter((_, i) => i !== index));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newFood.name || !newFood.description) return;
 
     const food: Food = {
-      id: editingFoodId || Date.now().toString(),
+      id: editingFoodId ? parseInt(editingFoodId) : Date.now(),
       name: newFood.name,
+      brand: newFood.brand || '',
+      type: newFood.type || '',
       description: newFood.description,
       photoUrl: newFood.photoUrl,
       portions: portions,
       tableType: tableType
     };
 
-    if (editingFoodId) {
-      foodService.updateFood(food);
-    } else {
-      foodService.addFood(food);
+    try {
+      if (editingFoodId) {
+        await foodService.updateFood(food);
+      } else {
+        await foodService.addFood(food);
+      }
+      await loadFoods();
+      resetForm();
+    } catch (error) {
+      console.error('Erreur lors de la sauvegarde:', error);
+      // TODO: Afficher un message d'erreur à l'utilisateur
     }
-
-    loadFoods();
-    resetForm();
   };
 
   const handleEdit = (food: Food) => {
-    setEditingFoodId(food.id);
+    setEditingFoodId(food.id.toString());
     setNewFood(food);
     setPortions(food.portions || []);
-    setShowPortionsTable(!!food.portions?.length);
-    setIsAdultFood(food.portions?.[0]?.portions.byActivity !== undefined);
     setTableType(food.tableType || 'both');
     setShowOffcanvas(true);
   };
 
-  const handleDelete = (foodId: string) => {
+  const handleDelete = async (foodId: string) => {
     if (window.confirm('Êtes-vous sûr de vouloir supprimer cette alimentation ?')) {
-      foodService.deleteFood(foodId);
-      loadFoods();
+      try {
+        await foodService.deleteFood(foodId);
+        await loadFoods();
+      } catch (error) {
+        console.error('Erreur lors de la suppression:', error);
+        // TODO: Afficher un message d'erreur à l'utilisateur
+      }
     }
   };
 
@@ -171,96 +176,13 @@ export const FoodManagement: React.FC = () => {
     setShowOffcanvas(false);
     setNewFood({});
     setPortions([]);
-    setShowPortionsTable(false);
-    setTempPhotoFile(null);
     setEditingFoodId(null);
-    setIsAdultFood(false);
     setTableType('both');
   };
 
   const handleAddClick = () => {
     resetForm();
     setShowOffcanvas(true);
-  };
-
-  const renderPortionFields = (portion: FoodPortion, index: number) => {
-    return (
-      <div className="grid grid-cols-7 gap-2 items-start">
-        <div>
-          <label className="block text-xs text-gray-600">Âge min (mois)</label>
-          <input
-            type="number"
-            placeholder="Âge min"
-            value={portion.criteria.age?.min ?? ''}
-            onChange={(e) => {
-              const value = e.target.value ? Number(e.target.value) : undefined;
-              handlePortionChange(index, 'criteria.age.min', value);
-            }}
-            className="w-full px-2 py-1 border rounded text-sm"
-          />
-        </div>
-        <div>
-          <label className="block text-xs text-gray-600">Âge max (mois)</label>
-          <input
-            type="number"
-            placeholder="Âge max"
-            value={portion.criteria.age?.max ?? ''}
-            onChange={(e) => {
-              const value = e.target.value ? Number(e.target.value) : undefined;
-              handlePortionChange(index, 'criteria.age.max', value);
-            }}
-            className="w-full px-2 py-1 border rounded text-sm"
-          />
-        </div>
-        <div>
-          <label className="block text-xs text-gray-600">Poids min (kg)</label>
-          <input
-            type="number"
-            placeholder="Poids min"
-            value={portion.criteria.weight?.min || 0}
-            onChange={(e) => handlePortionChange(index, 'criteria.weight.min', Number(e.target.value))}
-            className="w-full px-2 py-1 border rounded text-sm"
-          />
-        </div>
-        <div>
-          <label className="block text-xs text-gray-600">Poids max (kg)</label>
-          <input
-            type="number"
-            placeholder="Poids max"
-            value={portion.criteria.weight?.max || 0}
-            onChange={(e) => handlePortionChange(index, 'criteria.weight.max', Number(e.target.value))}
-            className="w-full px-2 py-1 border rounded text-sm"
-          />
-        </div>
-        <div>
-          <label className="block text-xs text-gray-600">Ration min (g/jour)</label>
-          <input
-            type="number"
-            placeholder="Ration min"
-            value={portion.portions.byActivity?.low || 0}
-            onChange={e => handlePortionChange(index, 'portions.byActivity.low', Number(e.target.value))}
-            className="w-full px-2 py-1 border rounded text-sm"
-          />
-        </div>
-        <div>
-          <label className="block text-xs text-gray-600">Ration max (g/jour)</label>
-          <input
-            type="number"
-            placeholder="Ration max"
-            value={portion.portions.byActivity?.moderate || 0}
-            onChange={e => handlePortionChange(index, 'portions.byActivity.moderate', Number(e.target.value))}
-            className="w-full px-2 py-1 border rounded text-sm"
-          />
-        </div>
-        <button
-          type="button"
-          onClick={() => handleRemovePortion(index)}
-          className="mt-6 p-1 text-gray-400 hover:text-red-600"
-        >
-          <XMarkIcon className="w-5 h-5" />
-        </button>
-      </div>
-    );
   };
 
   return (
@@ -319,7 +241,7 @@ export const FoodManagement: React.FC = () => {
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleDelete(food.id);
+                          handleDelete(food.id.toString());
                         }}
                         className="p-1.5 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors"
                         title="Supprimer"
@@ -333,7 +255,7 @@ export const FoodManagement: React.FC = () => {
                       className="mt-2 text-sm text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1"
                       onClick={(e) => {
                         e.stopPropagation();
-                        setShowPortionsModal(food.id);
+                        setShowPortionsModal(food.id.toString());
                       }}
                     >
                       <span>Voir le tableau des rations</span>
@@ -502,11 +424,7 @@ export const FoodManagement: React.FC = () => {
                               type="number"
                               placeholder="Poids min"
                               value={portion.criteria.weight?.min || 0}
-                              onChange={(e) => {
-                                const value = Number(e.target.value);
-                                handlePortionChange(index, 'criteria.weight.min', value);
-                                handlePortionChange(index, 'criteria.weight.max', value);
-                              }}
+                              onChange={(e) => handlePortionChange(index, 'criteria.weight.min', Number(e.target.value))}
                               className="w-full px-2 py-1 border rounded text-sm"
                             />
                             <input
@@ -567,20 +485,20 @@ export const FoodManagement: React.FC = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-lg p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
             <h4 className="text-lg font-medium mb-4">
-              Données du tableau - {foods.find(f => f.id === showPortionsModal)?.name}
+              Données du tableau - {foods.find(f => f.id.toString() === showPortionsModal)?.name}
             </h4>
             <div className="bg-gray-100 p-4 rounded">
               <pre className="text-sm overflow-x-auto whitespace-pre-wrap">
                 {JSON.stringify(foods
-                  .find(f => f.id === showPortionsModal)
-                  ?.portions.map(portion => ({
+                  .find(f => f.id.toString() === showPortionsModal)
+                  ?.portions?.map(portion => ({
                     ageMin: portion.criteria.age?.min ?? null,
                     ageMax: portion.criteria.age?.max ?? null,
                     weightMin: portion.criteria.weight?.min,
                     weightMax: portion.criteria.weight?.max,
                     allowanceMin: portion.portions.byActivity?.low,
                     allowanceMax: portion.portions.byActivity?.moderate
-                  })), null, 2)}
+                  })) || [], null, 2)}
               </pre>
             </div>
             <div className="mt-4 flex justify-end">

@@ -1,7 +1,18 @@
+export interface Food {
+  id: number;
+  name: string;
+  brand: string;
+  type: string;
+  description: string;
+  photoUrl?: string;
+  portions?: FoodPortion[];
+  tableType?: 'puppy' | 'adult' | 'both';
+}
+
 export interface FoodPortion {
   // Critères de sélection
   criteria: {
-    weight?: {
+    weight: {
       min: number;
       max: number;
     };
@@ -13,19 +24,9 @@ export interface FoodPortion {
   // Quantités recommandées selon l'activité
   portions: {
     default: number;
-    // Pour les aliments qui différencient par niveau d'activité
-    byActivity?: {
+    byActivity: {
       low: number;
       moderate: number;
     };
   };
-}
-
-export interface Food {
-  id: string;
-  name: string;
-  description: string;
-  photoUrl?: string;
-  portions: FoodPortion[];
-  tableType: 'puppy' | 'adult' | 'both';
 } 

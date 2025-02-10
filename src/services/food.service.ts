@@ -1,6 +1,7 @@
 import { Pet } from '../types/pet';
 import { WeightService } from './weight.service';
 import { Food } from '../types/food';
+import { db } from '../lib/db';
 
 interface FoodRecommendation {
   minPortion: number;
@@ -145,41 +146,21 @@ export const getFoodRecommendation = async (pet: Pet): Promise<FoodRecommendatio
   return null;
 };
 
-const FOODS_STORAGE_KEY = 'pet_care_foods';
-
 class FoodService {
-  private getFoodsFromStorage(): Food[] {
-    const storedFoods = localStorage.getItem(FOODS_STORAGE_KEY);
-    return storedFoods ? JSON.parse(storedFoods) : [];
+  async getAllFoods(): Promise<Food[]> {
+    return await db.foods.toArray();
   }
 
-  private saveFoodsToStorage(foods: Food[]): void {
-    localStorage.setItem(FOODS_STORAGE_KEY, JSON.stringify(foods));
+  async addFood(food: Food): Promise<void> {
+    await db.foods.add(food);
   }
 
-  getAllFoods(): Food[] {
-    return this.getFoodsFromStorage();
+  async updateFood(updatedFood: Food): Promise<void> {
+    await db.foods.put(updatedFood);
   }
 
-  addFood(food: Food): void {
-    const foods = this.getFoodsFromStorage();
-    foods.push(food);
-    this.saveFoodsToStorage(foods);
-  }
-
-  updateFood(updatedFood: Food): void {
-    const foods = this.getFoodsFromStorage();
-    const index = foods.findIndex(food => food.id === updatedFood.id);
-    if (index !== -1) {
-      foods[index] = updatedFood;
-      this.saveFoodsToStorage(foods);
-    }
-  }
-
-  deleteFood(foodId: string): void {
-    const foods = this.getFoodsFromStorage();
-    const filteredFoods = foods.filter(food => food.id !== foodId);
-    this.saveFoodsToStorage(filteredFoods);
+  async deleteFood(foodId: string): Promise<void> {
+    await db.foods.delete(parseInt(foodId));
   }
 }
 
