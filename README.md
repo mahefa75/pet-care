@@ -28,6 +28,15 @@ PetCare est une application web développée en React avec TypeScript, conçue p
 - Base de données PostgreSQL
 - API RESTful
 
+### Optimisation des Performances
+- Splitting des chunks optimisé via Vite/Rollup
+- Séparation des vendors en chunks distincts :
+  - Material-UI (`vendor-mui`)
+  - Chart.js et dépendances (`vendor-charts`)
+  - Heroicons (`vendor-icons`)
+- Limite de taille des chunks augmentée à 1000kB
+- Lazy loading des composants lourds
+
 ## 💻 Installation
 
 ```bash
@@ -129,6 +138,30 @@ Le déploiement peut être effectué sur diverses plateformes :
 - Netlify
 - AWS
 - Heroku
+
+### Configuration de Build
+Le projet utilise Vite avec une configuration optimisée pour la production :
+```typescript
+// vite.config.ts
+export default defineConfig({
+  plugins: [react()],
+  optimizeDeps: {
+    exclude: ['lucide-react'],
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-mui': ['@mui/material', '@mui/icons-material'],
+          'vendor-charts': ['chart.js', 'react-chartjs-2', 'chartjs-adapter-date-fns'],
+          'vendor-icons': ['@heroicons/react/24/outline']
+        }
+      }
+    },
+    chunkSizeWarningLimit: 1000
+  }
+});
+```
 
 ### Étapes de déploiement
 1. Build du projet : `npm run build`
