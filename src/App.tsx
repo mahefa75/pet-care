@@ -5,6 +5,8 @@ import { PetDetailsPage } from './pages/PetDetailsPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { Cog6ToothIcon } from '@heroicons/react/24/outline';
+import MedicalPage from './pages/MedicalPage';
+import { PetHealthPage } from './pages/PetHealthPage';
 
 const Navigation: React.FC = () => {
   const location = useLocation();
@@ -31,6 +33,13 @@ const Navigation: React.FC = () => {
                          text-gray-900 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium`}
               >
                 Animaux
+              </Link>
+              <Link
+                to="/medical"
+                className={`${location.pathname === '/medical' ? 'border-blue-500' : 'border-transparent hover:border-gray-300'} 
+                         text-gray-900 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium`}
+              >
+                Soins et suivis médicaux
               </Link>
             </div>
           </div>
@@ -61,6 +70,8 @@ const App: React.FC = () => {
             <Route path="/pets" element={<PetsPage />} />
             <Route path="/pet/:id" element={<PetDetailsPage />} />
             <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/medical" element={<MedicalPage />} />
+            <Route path="/pet/:id/health" element={<PetHealthPage />} />
           </Routes>
         </main>
       </div>
