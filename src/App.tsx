@@ -7,6 +7,7 @@ import { SettingsPage } from './pages/SettingsPage';
 import { Cog6ToothIcon } from '@heroicons/react/24/outline';
 import MedicalPage from './pages/MedicalPage';
 import { PetHealthPage } from './pages/PetHealthPage';
+import ConnectionStatus from './components/common/ConnectionStatus';
 
 const Navigation: React.FC = () => {
   const location = useLocation();
@@ -64,6 +65,7 @@ const App: React.FC = () => {
     <Router>
       <div className="min-h-screen bg-gray-50">
         <Navigation />
+        <ConnectionStatus />
         <main>
           <Routes>
             <Route path="/" element={<DashboardPage />} />
