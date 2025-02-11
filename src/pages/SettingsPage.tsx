@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { DataBackup } from '../components/Settings/DataBackup';
 import { FoodManagement } from '../components/Settings/FoodManagement';
+import { FirebaseSync } from '../components/Settings/FirebaseSync';
 
 export const SettingsPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('backup');
 
   const tabs = [
     { id: 'backup', label: 'Sauvegarde des données' },
+    { id: 'firebase', label: 'Synchronisation Firebase' },
     { id: 'food', label: 'Alimentations' },
     { id: 'general', label: 'Général' },
   ];
@@ -38,6 +40,11 @@ export const SettingsPage: React.FC = () => {
         {activeTab === 'backup' && (
           <div className="bg-white rounded-lg p-6 shadow-sm">
             <DataBackup />
+          </div>
+        )}
+        {activeTab === 'firebase' && (
+          <div className="bg-white rounded-lg p-6 shadow-sm">
+            <FirebaseSync />
           </div>
         )}
         {activeTab === 'food' && (
