@@ -1,14 +1,17 @@
 import React, { useState } from 'react';
 import { SyncService } from '../services/sync.service';
+import { useSyncStore } from '../stores/syncStore';
 
 export const SyncButton: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
   const syncService = new SyncService();
+  const setIsSyncing = useSyncStore(state => state.setIsSyncing);
 
   const handleSync = async () => {
     setIsLoading(true);
     setMessage(null);
+    setIsSyncing(true);
 
     try {
       const result = await syncService.syncToFirebase();
@@ -25,6 +28,7 @@ export const SyncButton: React.FC = () => {
       });
     } finally {
       setIsLoading(false);
+      setIsSyncing(false);
     }
   };
 
