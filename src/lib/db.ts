@@ -66,23 +66,6 @@ export class PetCareDB extends Dexie {
     }
   }
 
-  private async updateSyncInfo() {
-    try {
-      const dataHash = await generateDataHash(this);
-      const syncInfo: SyncInfo = {
-        id: 1,
-        lastUpdate: new Date(),
-        dataHash,
-        status: 'idle'
-      };
-      await this.syncInfo.put(syncInfo);
-      return syncInfo;
-    } catch (error) {
-      console.error('Error updating sync info:', error);
-      throw error;
-    }
-  }
-
   private setupSyncMiddleware() {
     const excludedTables = ['syncInfo', 'syncLog', 'syncQueue'];
     const self = this;
@@ -98,13 +81,26 @@ export class PetCareDB extends Dexie {
             return {
               ...table,
               mutate: async req => {
+                console.log(`[Middleware] Mutation request for table ${tableName}:`, req);
+
+                // Si c'est une table exclue ou une opération de deleteRange, passer directement
+                if (excludedTables.includes(tableName) || req.type === 'deleteRange') {
+                  console.log(`[Middleware] Skipping excluded table or deleteRange operation`);
+                  return table.mutate(req);
+                }
+
+                // Effectuer la mutation
                 const res = await table.mutate(req);
-                
-                if (!excludedTables.includes(tableName) && req.type !== 'deleteRange') {
+                console.log(`[Middleware] Mutation result:`, res);
+
+                // Gérer la synchronisation si nous sommes dans une transaction appropriée
+                const results = res.results || [];
+                if (results.length > 0) {
+                  console.log(`[Middleware] Processing results:`, results);
                   const changes: TableChange[] = [];
                   
                   if (req.type === 'add' || req.type === 'put') {
-                    const primaryKey = res.results?.[0];
+                    const primaryKey = results[0];
                     if (primaryKey !== undefined) {
                       changes.push({
                         tableName,
@@ -124,12 +120,20 @@ export class PetCareDB extends Dexie {
                   }
 
                   if (changes.length > 0) {
-                    try {
-                      // Vérifier si nous sommes déjà dans une transaction
-                      const inTransaction = self.isInTransaction;
-                      
-                      // Si nous sommes dans une transaction, mettre à jour directement
-                      if (inTransaction) {
+                    console.log(`[Middleware] Changes to sync:`, changes);
+                    const currentTransaction = (Dexie as any).currentTransaction;
+                    console.log(`[Middleware] Current transaction:`, currentTransaction);
+
+                    if (currentTransaction) {
+                      const tables = currentTransaction.tables || [];
+                      const tableNames = tables.map((t: any) => t.name);
+                      console.log(`[Middleware] Tables in transaction:`, tableNames);
+
+                      const canUpdateSync = tableNames.includes('syncInfo') && tableNames.includes('syncQueue');
+                      console.log(`[Middleware] Can update sync:`, canUpdateSync);
+
+                      if (canUpdateSync) {
+                        console.log(`[Middleware] Updating sync info and queue`);
                         const dataHash = await generateDataHash(self);
                         await self.syncInfo.put({
                           id: 1,
@@ -143,22 +147,19 @@ export class PetCareDB extends Dexie {
                           status: 'pending',
                           createdAt: new Date()
                         });
+                        console.log(`[Middleware] Sync update completed`);
                       } else {
-                        // Si nous ne sommes pas dans une transaction, en créer une nouvelle
-                        await self.transaction('rw', ['syncInfo', 'syncQueue'], async () => {
-                          await self.updateSyncInfo();
-                          await self.syncQueue.add({
-                            changes,
-                            status: 'pending',
-                            createdAt: new Date()
-                          });
+                        console.log('Skipping sync update - Required tables not in transaction:', {
+                          required: ['syncInfo', 'syncQueue'],
+                          available: tableNames
                         });
                       }
-                    } catch (error) {
-                      console.error('Error handling database changes:', error);
+                    } else {
+                      console.log(`[Middleware] No active transaction found`);
                     }
                   }
                 }
+
                 return res;
               }
             };
