@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { SyncLogEntry } from '../types/sync';
 
-interface SyncState {
+export interface SyncState {
   isSyncing: boolean;
   syncStatus: 'idle' | 'syncing' | 'error' | 'offline';
   lastSync: Date | null;

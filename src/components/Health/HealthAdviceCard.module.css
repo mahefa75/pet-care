@@ -1,0 +1,66 @@
+/* Styles pour le conteneur principal */
+.container {
+  margin-top: 1rem;
+  background-color: rgb(239, 246, 255);
+  border-radius: 0.5rem;
+  padding: 1rem;
+}
+
+/* Styles pour le bouton d'expansion */
+.expandButton {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: rgb(30, 64, 175);
+}
+
+/* Styles pour le contenu */
+.content {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Styles pour les sections */
+.section {
+  margin-bottom: 1rem;
+}
+
+/* Styles pour les titres de section */
+.sectionTitle {
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+/* Styles pour les listes */
+.list {
+  list-style-type: disc;
+  list-style-position: inside;
+  margin-top: 0.25rem;
+}
+
+/* Styles pour les éléments de liste */
+.listItem {
+  margin-bottom: 0.25rem;
+}
+
+/* Styles pour la section d'alerte */
+.alertSection {
+  background-color: rgb(254, 242, 242);
+  padding: 0.75rem;
+  border-radius: 0.375rem;
+}
+
+/* Styles pour le titre d'alerte */
+.alertTitle {
+  color: rgb(153, 27, 27);
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+/* Styles pour le texte d'alerte */
+.alertText {
+  color: rgb(185, 28, 28);
+} 

@@ -19,9 +19,11 @@ import { PetService } from '../services/pet.service';
 import { Pet, WeightMeasurement } from '../types/pet';
 import { UpcomingReminders } from '../components/Treatment/UpcomingReminders';
 import { CalendarIcon, ChartBarIcon, PresentationChartLineIcon } from '@heroicons/react/24/outline';
+import { ArrowTrendingUpIcon } from '@heroicons/react/24/solid';
 import { GroupedFoodRecommendation } from '../components/Pet/FoodRecommendation';
 import { BulkWeightEntry } from '../components/Weight/BulkWeightEntry';
 import { Button } from '../components/UI/Button';
+import { addDays } from 'date-fns';
 
 ChartJS.register(
   CategoryScale,
@@ -38,6 +40,29 @@ ChartJS.register(
 const weightService = new WeightService();
 const petService = new PetService();
 
+// Fonction pour calculer la régression linéaire
+const calculateLinearRegression = (data: { x: number, y: number }[]) => {
+  const n = data.length;
+  if (n < 2) return null;
+
+  let sumX = 0;
+  let sumY = 0;
+  let sumXY = 0;
+  let sumXX = 0;
+
+  for (const point of data) {
+    sumX += point.x;
+    sumY += point.y;
+    sumXY += point.x * point.y;
+    sumXX += point.x * point.x;
+  }
+
+  const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+  const intercept = (sumY - slope * sumX) / n;
+
+  return { slope, intercept };
+};
+
 export const DashboardPage: React.FC = () => {
   const [pets, setPets] = useState<Pet[]>([]);
   const [weightData, setWeightData] = useState<Map<number, WeightMeasurement[]>>(new Map());
@@ -47,6 +72,7 @@ export const DashboardPage: React.FC = () => {
   const [chartType, setChartType] = useState<'line' | 'bar'>('line');
   const remindersMap = new Map<number, boolean>();
   const [isBulkWeightEntryOpen, setIsBulkWeightEntryOpen] = useState(false);
+  const [showTrendlines, setShowTrendlines] = useState(false);
 
   const handleHasReminders = (petId: number, hasReminders: boolean) => {
     remindersMap.set(petId, hasReminders);
@@ -87,24 +113,76 @@ export const DashboardPage: React.FC = () => {
   };
 
   const getChartData = () => {
-    const datasets = Array.from(weightData.entries()).map(([petId, weights], index) => {
+    const datasets = Array.from(weightData.entries()).flatMap(([petId, weights], index) => {
       const pet = pets.find(p => p.id === petId);
       const sortedWeights = [...weights].sort((a, b) => 
         new Date(a.date).getTime() - new Date(b.date).getTime()
       );
+
+      // Préparer les données pour la régression linéaire
+      const regressionData = sortedWeights.map((_, index) => ({
+        x: index,
+        y: sortedWeights[index].weight
+      }));
+
+      // Calculer la régression linéaire
+      const regression = calculateLinearRegression(regressionData);
+
+      // Générer les points de projection pour les 14 prochains jours
+      const projectionPoints: { x: Date; y: number }[] = [];
+      if (regression && sortedWeights.length > 0) {
+        const lastDate = new Date(sortedWeights[sortedWeights.length - 1].date);
+        for (let i = 1; i <= 14; i++) {
+          const projectedDate = addDays(lastDate, i);
+          const projectedWeight = regression.slope * (regressionData.length + i - 1) + regression.intercept;
+          projectionPoints.push({
+            x: projectedDate,
+            y: Math.max(0, projectedWeight) // Éviter les poids négatifs
+          });
+        }
+      }
+
+      const baseColor = colors[index % colors.length];
       
-      return {
+      // Dataset pour les données réelles
+      const mainDataset = {
         label: pet?.name || 'Inconnu',
         data: sortedWeights.map(w => ({
           x: new Date(w.date),
           y: w.weight
         })),
-        borderColor: colors[index % colors.length],
-        backgroundColor: colors[index % colors.length].replace('rgb', 'rgba').replace(')', ', 0.1)'),
+        borderColor: baseColor,
+        backgroundColor: baseColor.replace('rgb', 'rgba').replace(')', ', 0.1)'),
         borderWidth: 2,
         pointRadius: 4,
         tension: 0.3
       };
+
+      // Ne retourner le dataset de tendance que si showTrendlines est true
+      if (!showTrendlines) {
+        return [mainDataset];
+      }
+
+      // Dataset pour la tendance
+      const trendDataset = {
+        label: `${pet?.name || 'Inconnu'} (Tendance)`,
+        data: [
+          ...sortedWeights.map(w => ({
+            x: new Date(w.date),
+            y: w.weight
+          })),
+          ...projectionPoints
+        ],
+        borderColor: baseColor.replace('rgb', 'rgba').replace(')', ', 0.5)'),
+        backgroundColor: 'transparent',
+        borderWidth: 2,
+        borderDash: [5, 5],
+        pointRadius: 0,
+        tension: 0,
+        fill: false
+      };
+
+      return [mainDataset, trendDataset];
     });
 
     return {
@@ -224,7 +302,7 @@ export const DashboardPage: React.FC = () => {
             <div className="flex justify-between items-center mb-8">
               <div className="flex items-center gap-4">
                 <h2 className="text-xl font-semibold text-gray-900">Suivi des poids</h2>
-                <div className="flex gap-2">
+                <div className="flex items-center gap-2">
                   <button
                     onClick={() => setChartType('line')}
                     className={`p-2 rounded-md hover:bg-gray-100 transition-colors ${
@@ -243,6 +321,18 @@ export const DashboardPage: React.FC = () => {
                   >
                     <ChartBarIcon className="h-5 w-5" />
                   </button>
+                  {chartType === 'line' && (
+                    <button
+                      onClick={() => setShowTrendlines(!showTrendlines)}
+                      className={`flex items-center gap-1 px-3 py-1.5 rounded-md hover:bg-gray-100 transition-colors ${
+                        showTrendlines ? 'bg-gray-100 text-blue-600' : 'text-gray-600'
+                      }`}
+                      title="Afficher/masquer les tendances"
+                    >
+                      <ArrowTrendingUpIcon className="h-5 w-5" />
+                      <span className="text-sm font-medium">Tendances</span>
+                    </button>
+                  )}
                 </div>
               </div>
               <Button

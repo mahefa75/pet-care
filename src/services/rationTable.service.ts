@@ -27,27 +27,6 @@ interface RationTableRow {
   allowanceMax: number;
 }
 
-// Données de test pour simuler l'OCR
-const SAMPLE_DATA: RationTableRow[] = [
-  // Données pour chiots
-  { ageMin: 2, ageMax: 2, weightMin: 1, weightMax: 2, allowanceMin: 60, allowanceMax: 80 },
-  { ageMin: 3, ageMax: 3, weightMin: 1, weightMax: 2, allowanceMin: 40, allowanceMax: 60 },
-  { ageMin: 4, ageMax: 4, weightMin: 1, weightMax: 2, allowanceMin: 40, allowanceMax: 60 },
-  { ageMin: 5, ageMax: 6, weightMin: 1, weightMax: 2, allowanceMin: 40, allowanceMax: 60 },
-  { ageMin: 7, ageMax: 8, weightMin: 1, weightMax: 2, allowanceMin: 40, allowanceMax: 55 },
-  
-  { ageMin: 2, ageMax: 2, weightMin: 2, weightMax: 3, allowanceMin: 90, allowanceMax: 110 },
-  { ageMin: 3, ageMax: 3, weightMin: 2, weightMax: 3, allowanceMin: 70, allowanceMax: 90 },
-  { ageMin: 4, ageMax: 4, weightMin: 2, weightMax: 3, allowanceMin: 70, allowanceMax: 90 },
-  
-  // Données pour adultes (sans âge)
-  { weightMin: 5, weightMax: 10, allowanceMin: 90, allowanceMax: 100 },
-  { weightMin: 10, weightMax: 15, allowanceMin: 150, allowanceMax: 170 },
-  { weightMin: 15, weightMax: 20, allowanceMin: 200, allowanceMax: 230 },
-  { weightMin: 20, weightMax: 25, allowanceMin: 250, allowanceMax: 290 },
-  { weightMin: 25, weightMax: 30, allowanceMin: 300, allowanceMax: 350 },
-];
-
 export class RationTableService {
   private async extractTextFromImage(imageFile: File): Promise<string> {
     try {
@@ -166,7 +145,7 @@ Important rules:
 
   async extractFromImage(imageFile: File): Promise<OCRResult> {
     if (!imageFile) {
-      throw new Error('No image file provided');
+      throw new Error('Aucun fichier fourni');
     }
 
     try {
@@ -204,23 +183,8 @@ Important rules:
     } catch (error: any) {
       console.error('Erreur lors de l\'OCR:', error);
       
-      // Si aucune donnée n'a été extraite, on retourne les données de test
-      return {
-        type: 'adult',
-        portions: SAMPLE_DATA
-          .filter(row => !row.ageMin)
-          .map(row => this.convertRowToPortion(row)),
-        rawData: JSON.stringify({
-          error: error.message || 'OCR_ERROR',
-          fallbackData: true,
-          timestamp: Date.now()
-        }, null, 2),
-        error: {
-          code: error.code || 'OCR_ERROR',
-          message: error.message || 'Une erreur est survenue lors de la reconnaissance du tableau',
-          details: error
-        }
-      };
+      // Retourner une erreur au lieu des données de test
+      throw new Error('Une erreur est survenue lors de la reconnaissance du tableau');
     }
   }
 

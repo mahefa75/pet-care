@@ -14,12 +14,17 @@ export interface HealthEvent {
 
 export const healthEventService = {
   async addHealthEvent(event: Omit<HealthEvent, 'id'>): Promise<HealthEvent> {
-    const id = await db.healthEvents.add(event);
-    return { ...event, id };
+    const normalizedEvent = {
+      ...event,
+      petId: typeof event.petId === 'string' ? parseInt(event.petId) : event.petId
+    };
+    const id = await db.healthEvents.add(normalizedEvent);
+    return { ...normalizedEvent, id };
   },
 
   async getHealthEventsByPetId(petId: number): Promise<HealthEvent[]> {
-    return await db.healthEvents.where('petId').equals(petId).toArray();
+    const normalizedPetId = typeof petId === 'string' ? parseInt(petId) : petId;
+    return await db.healthEvents.where('petId').equals(normalizedPetId).toArray();
   },
 
   async getAllHealthEvents(): Promise<HealthEvent[]> {
@@ -85,85 +90,22 @@ export const healthEventService = {
   },
 
   async getActiveHealthEvents(): Promise<HealthEvent[]> {
-    return await db.healthEvents
+    console.log('Récupération des événements de santé actifs...');
+    const events = await db.healthEvents
       .filter(event => !event.resolved)
       .toArray();
+    
+    console.log('Événements actifs trouvés:', events);
+    
+    // S'assurer que les dates sont des objets Date et que petId est un nombre
+    const formattedEvents = events.map(event => ({
+      ...event,
+      petId: typeof event.petId === 'string' ? parseInt(event.petId) : event.petId,
+      date: new Date(event.date),
+      resolvedDate: event.resolvedDate ? new Date(event.resolvedDate) : undefined
+    }));
+    
+    console.log('Événements formatés:', formattedEvents);
+    return formattedEvents;
   }
-};
-
-// Fonction de test auto-exécutée
-(async function testUpdateHealthEvent() {
-  let createdEventId: number | undefined;
-  
-  try {
-    console.log('🧪 Starting updateHealthEvent test...');
-
-    // Test 1: Créer un événement
-    const newEvent: Omit<HealthEvent, 'id'> = {
-      petId: 999,
-      date: new Date(),
-      type: 'illness',
-      description: 'Test event',
-      severity: 'low',
-      resolved: false,
-      notes: 'Test notes'
-    };
-    
-    console.log('Test 1: Creating event...');
-    const createdEvent = await healthEventService.addHealthEvent(newEvent);
-    createdEventId = createdEvent.id;
-    
-    if (!createdEvent.id) {
-      throw new Error('Created event has no ID');
-    }
-    console.log('✓ Event created successfully:', createdEvent);
-
-    // Test 2: Mettre à jour l'événement
-    const updatedData: HealthEvent = {
-      ...createdEvent,
-      description: 'Updated test event',
-      resolved: true,
-      resolvedDate: new Date()
-    };
-    
-    console.log('Test 2: Updating event...');
-    await healthEventService.updateHealthEvent(createdEvent.id!, updatedData);
-    console.log('✓ Update operation completed');
-
-    // Test 3: Vérifier la mise à jour
-    console.log('Test 3: Verifying update...');
-    const events = await db.healthEvents.where('id').equals(createdEvent.id).toArray();
-    
-    if (events.length === 0) {
-      throw new Error('Updated event not found');
-    }
-    
-    const updatedEvent = events[0];
-    console.log('✓ Retrieved updated event:', updatedEvent);
-
-    // Vérifier que les modifications ont été appliquées
-    if (updatedEvent.description !== 'Updated test event' || !updatedEvent.resolved) {
-      throw new Error('Event was not updated correctly');
-    }
-    console.log('✓ Update verified successfully');
-
-  } catch (error) {
-    console.error('❌ Test failed:', error);
-    throw error;
-  } finally {
-    // Nettoyage
-    try {
-      if (createdEventId) {
-        console.log('Cleaning up test data...');
-        await healthEventService.deleteHealthEvent(createdEventId);
-        console.log('✓ Test data cleaned up');
-      }
-    } catch (cleanupError) {
-      console.error('Warning: Cleanup failed:', cleanupError);
-    }
-  }
-  
-  console.log('✅ All tests completed successfully');
-})().catch(error => {
-  console.error('Test suite failed:', error);
-}); 
+}; 

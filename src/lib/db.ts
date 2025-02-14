@@ -7,6 +7,7 @@ import { HealthEvent } from '../services/healthEvent.service';
 import { Food } from '../types/food';
 import { SyncInfo, SyncLogEntry, SyncQueue, TableChange } from '../types/sync';
 import { generateDataHash } from '../utils/hash';
+import { Veterinarian } from '../services/veterinarian.service';
 
 export class PetCareDB extends Dexie {
   pets!: Table<Pet, number>;
@@ -20,6 +21,7 @@ export class PetCareDB extends Dexie {
   syncInfo!: Table<SyncInfo, 1>;
   syncLog!: Table<SyncLogEntry, number>;
   syncQueue!: Table<SyncQueue, number>;
+  veterinarians!: Table<Veterinarian>;
 
   constructor() {
     super('petcare');
@@ -35,7 +37,8 @@ export class PetCareDB extends Dexie {
       foods: '++id, name, type, brand',
       syncInfo: 'id,lastUpdate,status',
       syncLog: '++id,timestamp,operation,status',
-      syncQueue: '++id,createdAt,status'
+      syncQueue: '++id,createdAt,status',
+      veterinarians: '++id, name, speciality, createdAt, updatedAt'
     });
 
     // Configurer le middleware immédiatement après la définition des tables
