@@ -2,15 +2,16 @@ import React, { useState } from 'react';
 import { DataBackup } from '../components/Settings/DataBackup';
 import { FoodManagement } from '../components/Settings/FoodManagement';
 import { FirebaseSync } from '../components/Settings/FirebaseSync';
+import { GeneralSettings } from '../components/Settings/GeneralSettings';
 
 export const SettingsPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('backup');
 
   const tabs = [
+    { id: 'general', label: 'Général' },
     { id: 'backup', label: 'Sauvegarde des données' },
     { id: 'firebase', label: 'Synchronisation Firebase' },
     { id: 'food', label: 'Alimentations' },
-    { id: 'general', label: 'Général' },
   ];
 
   return (
@@ -36,27 +37,11 @@ export const SettingsPage: React.FC = () => {
         </ul>
       </div>
 
-      <div className="mt-4">
-        {activeTab === 'backup' && (
-          <div className="bg-white rounded-lg p-6 shadow-sm">
-            <DataBackup />
-          </div>
-        )}
-        {activeTab === 'firebase' && (
-          <div className="bg-white rounded-lg p-6 shadow-sm">
-            <FirebaseSync />
-          </div>
-        )}
-        {activeTab === 'food' && (
-          <div className="bg-white rounded-lg p-6 shadow-sm">
-            <FoodManagement />
-          </div>
-        )}
-        {activeTab === 'general' && (
-          <div className="bg-white rounded-lg p-6 shadow-sm">
-            <p className="text-gray-500">Paramètres généraux à venir...</p>
-          </div>
-        )}
+      <div className="bg-white rounded-lg p-6 shadow-sm">
+        {activeTab === 'general' && <GeneralSettings />}
+        {activeTab === 'backup' && <DataBackup />}
+        {activeTab === 'firebase' && <FirebaseSync />}
+        {activeTab === 'food' && <FoodManagement />}
       </div>
     </div>
   );

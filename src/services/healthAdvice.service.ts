@@ -2,8 +2,8 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { Pet } from '../types/pet';
 import { HealthEvent } from './healthEvent.service';
 import { WeightService } from './weight.service';
+import { configService } from './config.service';
 
-const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 const weightService = new WeightService();
 
 interface GosbiRecommendation {
@@ -88,16 +88,19 @@ export class HealthAdviceService {
   };
 
   constructor() {
-    if (!GEMINI_API_KEY) {
-      console.error('Clé API Gemini non configurée. Veuillez ajouter VITE_GEMINI_API_KEY dans le fichier .env');
-    } else {
+    const geminiApiKey = configService.getGeminiApiKey();
+    if (geminiApiKey) {
       try {
-        const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+        const genAI = new GoogleGenerativeAI(geminiApiKey);
         this.model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
         console.log('Service Gemini initialisé avec succès');
       } catch (error) {
         console.error('Erreur lors de l\'initialisation du service Gemini:', error);
+        this.model = null;
       }
+    } else {
+      console.warn('Service Gemini non initialisé : clé API manquante');
+      this.model = null;
     }
   }
 

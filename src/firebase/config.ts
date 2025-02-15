@@ -1,23 +1,39 @@
-import { initializeApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
-import { getStorage } from 'firebase/storage';
+import { initializeApp, getApps, deleteApp } from 'firebase/app';
+import { Auth, getAuth } from 'firebase/auth';
+import { Firestore, getFirestore } from 'firebase/firestore';
+import { FirebaseStorage, getStorage } from 'firebase/storage';
+import { configService } from '../services/config.service';
 
-const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID
-};
+// Variables pour stocker les services Firebase
+let auth: Auth | null = null;
+let db: Firestore | null = null;
+let storage: FirebaseStorage | null = null;
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
+try {
+  // Nettoyer les instances existantes
+  getApps().forEach(app => {
+    deleteApp(app);
+  });
 
-// Initialize Firebase services
-export const auth = getAuth(app);
-export const db = getFirestore(app);
-export const storage = getStorage(app);
+  // Récupérer la configuration depuis le configService
+  const firebaseConfig = configService.getFirebaseConfig();
 
-export default app; 
+  if (firebaseConfig) {
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+
+    // Initialize Firebase services
+    auth = getAuth(app);
+    db = getFirestore(app);
+    storage = getStorage(app);
+
+    console.log('Firebase initialisé avec succès');
+  } else {
+    console.warn('Firebase non initialisé : configuration manquante ou incomplète');
+  }
+} catch (error) {
+  console.error('Erreur lors de l\'initialisation de Firebase:', error);
+}
+
+// Exporter les services (null si non initialisés)
+export { auth, db, storage }; 
