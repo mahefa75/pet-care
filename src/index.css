@@ -1,3 +1,26 @@
+/* Import des styles spécifiques aux composants */
+@import './components/Health/HealthAdviceCard.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-gray-50;
+  }
+}
+
+@layer components {
+  .page-container {
+    @apply container mx-auto px-4 py-8;
+  }
+
+  .section-title {
+    @apply text-2xl font-bold mb-6 text-gray-800;
+  }
+
+  .card {
+    @apply bg-white rounded-lg shadow-md p-4;
+  }
+}

@@ -8,11 +8,13 @@ PetCare est une application web développée en React avec TypeScript, conçue p
 2. [Installation](#installation)
 3. [Structure du Projet](#structure-du-projet)
 4. [Technologies Utilisées](#technologies-utilisées)
-5. [API et Endpoints](#api-et-endpoints)
-6. [Gestion d'État](#gestion-détat)
-7. [Tests](#tests)
-8. [Déploiement](#déploiement)
-9. [UX/UI Design](#ux-ui-design)
+5. [Services](#services)
+6. [Composants](#composants)
+7. [API et Endpoints](#api-et-endpoints)
+8. [Gestion d'État](#gestion-détat)
+9. [Tests](#tests)
+10. [Déploiement](#déploiement)
+11. [UX/UI Design](#ux-ui-design)
 
 ## 🏗 Architecture Technique
 
@@ -22,10 +24,12 @@ PetCare est une application web développée en React avec TypeScript, conçue p
 - React Router pour la navigation
 - React Query pour la gestion des données
 - Axios pour les requêtes HTTP
+- Supabase comme backend
+- Firebase pour certaines fonctionnalités
 
 ### Backend
-- Node.js avec Express
-- Base de données PostgreSQL
+- Supabase
+- PostgreSQL
 - API RESTful
 
 ### Optimisation des Performances
@@ -46,6 +50,9 @@ git clone [url-du-repo]
 # Installer les dépendances
 npm install
 
+# Configurer les variables d'environnement
+cp .env.example .env
+
 # Lancer en développement
 npm run dev
 
@@ -59,14 +66,20 @@ npm run build
 src/
 ├── components/          # Composants React réutilisables
 │   ├── Pet/            # Composants liés aux animaux
+│   ├── Weight/         # Composants de gestion du poids
+│   ├── Treatment/      # Composants de traitements médicaux
+│   ├── Appointment/    # Composants de rendez-vous
+│   ├── Service/        # Composants de services
+│   ├── Staff/          # Composants du personnel
 │   ├── Layout/         # Composants de mise en page
 │   └── UI/             # Composants d'interface utilisateur
 ├── pages/              # Pages de l'application
-├── hooks/              # Custom hooks React
 ├── services/           # Services API et utilitaires
 ├── types/              # Types TypeScript
 ├── utils/              # Fonctions utilitaires
-└── context/            # Contextes React
+├── stores/             # Gestion d'état (Zustand)
+├── lib/               # Bibliothèques/configurations
+└── firebase/          # Configuration Firebase
 ```
 
 ## 🛠 Technologies Utilisées
@@ -75,48 +88,116 @@ src/
 - React 18.x
 - TypeScript 5.x
 - Tailwind CSS 3.x
-- React Router 6.x
-- React Query 4.x
-- Axios
+- Material-UI (MUI) 6.x
+- React Router 7.x
+- Zustand 5.x pour la gestion d'état
+- Chart.js et react-chartjs-2
+- Tesseract.js pour l'OCR
+- Firebase 11.x
 
 ### Outils de développement
-- ESLint
-- Prettier
-- Vite
+- Vite 5.x
+- ESLint 9.x
+- TypeScript 5.x
 - Jest
 - React Testing Library
 
+## 📚 Services
+
+### PetService
+- Gestion CRUD des animaux
+- Historique médical
+- Filtrage et pagination
+
+### AppointmentService
+- Gestion des rendez-vous
+- Vérification des disponibilités
+- Mise à jour des statuts
+
+### ServiceService
+- Gestion des services par catégorie
+- CRUD des services
+
+### StaffService
+- Gestion du personnel
+- Planning et disponibilités
+
+### PhotoService
+- Upload et gestion des photos
+- Support base64
+
+### WeightService
+- Suivi du poids des animaux
+- Historique des mesures
+
+### TreatmentService
+- Gestion des traitements et chirurgies
+- Système de rappels
+
+## 🎨 Composants
+
+### Composants Pet
+- `PetCard` - Affichage des informations d'un animal
+- `PetList` - Liste des animaux avec filtres
+- `PetForm` - Formulaire d'ajout/modification
+- `PetDetails` - Détails complets d'un animal
+- `PetPhotoUpload` - Gestion des photos
+- `WeightChart` - Graphique d'évolution du poids
+
+### Composants Treatment
+- `TreatmentHistory` - Historique des traitements
+- `UpcomingReminders` - Rappels à venir
+- `MedicalFollowUp` - Suivi médical
+- `AddTreatmentForm` - Ajout de traitement
+
+### Composants UI
+- Boutons personnalisés
+- Inputs stylisés
+- Modals accessibles
+- Composants de loading
+
 ## 🔌 API et Endpoints
 
-### Animaux
-- `GET /api/pets` - Récupérer tous les animaux
+### Animaux (PetService)
+- `GET /api/pets` - Récupérer tous les animaux avec filtres et pagination
 - `GET /api/pets/:id` - Récupérer un animal spécifique
 - `POST /api/pets` - Ajouter un nouvel animal
 - `PUT /api/pets/:id` - Mettre à jour un animal
 - `DELETE /api/pets/:id` - Supprimer un animal
+- `GET /api/pets/:id/medical-history` - Historique médical
 
-### Rendez-vous
+### Rendez-vous (AppointmentService)
 - `GET /api/appointments` - Récupérer tous les rendez-vous
 - `POST /api/appointments` - Créer un nouveau rendez-vous
-- `PUT /api/appointments/:id` - Modifier un rendez-vous
+- `PUT /api/appointments/:id/status` - Modifier le statut
 - `DELETE /api/appointments/:id` - Annuler un rendez-vous
+- `GET /api/appointments/availability` - Vérifier les disponibilités
 
-### Services
-- `GET /api/services` - Liste des services disponibles
-- `POST /api/services` - Ajouter un nouveau service
-- `PUT /api/services/:id` - Modifier un service
-- `DELETE /api/services/:id` - Supprimer un service
+### Traitements (TreatmentService)
+- `GET /api/treatments` - Liste des traitements
+- `POST /api/treatments` - Ajouter un traitement
+- `POST /api/treatments/surgery` - Enregistrer une chirurgie
+- `GET /api/treatments/reminders` - Obtenir les rappels
+
+### Poids (WeightService)
+- `GET /api/weights/:petId` - Historique des poids
+- `POST /api/weights` - Ajouter une mesure
+- `GET /api/weights/:petId/latest` - Dernier poids enregistré
 
 ## 📊 Gestion d'État
 
 L'application utilise plusieurs approches pour la gestion d'état :
-- React Query pour la gestion des données serveur
-- Context API pour l'état global de l'application
+- Zustand pour l'état global de l'application
+- React Query pour la gestion du cache et des requêtes
 - useState pour l'état local des composants
 
-### Exemple d'utilisation de React Query :
+### Exemple d'utilisation de Zustand :
 ```typescript
-const { data: pets, isLoading } = useQuery('pets', fetchPets);
+const useStore = create((set) => ({
+  pets: [],
+  setPets: (pets) => set({ pets }),
+  addPet: (pet) => set((state) => ({ pets: [...state.pets, pet] }))
+}));
 ```
 
 ## 🧪 Tests
@@ -129,6 +210,26 @@ npm test
 
 # Lancer les tests avec couverture
 npm test -- --coverage
+```
+
+### Exemple de test de composant :
+```typescript
+import { render, screen, fireEvent } from '@testing-library/react';
+import { PetCard } from './PetCard';
+
+describe('PetCard', () => {
+  it('renders pet information correctly', () => {
+    const pet = {
+      id: 1,
+      name: 'Max',
+      species: PetSpecies.DOG,
+      breed: 'Labrador'
+    };
+
+    render(<PetCard pet={pet} />);
+    expect(screen.getByText(pet.name)).toBeInTheDocument();
+  });
+});
 ```
 
 ## 🚀 Déploiement
@@ -163,49 +264,55 @@ export default defineConfig({
 });
 ```
 
-### Étapes de déploiement
-1. Build du projet : `npm run build`
-2. Test des fichiers de build : `npm run preview`
-3. Déploiement selon la plateforme choisie
-
 ## 🔐 Variables d'Environnement
 
 Créer un fichier `.env` à la racine du projet :
 
 ```env
+VITE_SUPABASE_URL=votre_url_supabase
+VITE_SUPABASE_ANON_KEY=votre_clé_anon_supabase
+VITE_FIREBASE_CONFIG=votre_config_firebase
 VITE_API_URL=http://localhost:3000
-VITE_API_KEY=votre_clé_api
 ```
 
-## 📝 Conventions de Code
+## 📝 Types Principaux
 
-- Utilisation de ESLint et Prettier
-- Nommage des composants en PascalCase
-- Nommage des fonctions en camelCase
-- Types TypeScript pour toutes les props
-- Documentation JSDoc pour les fonctions importantes
+```typescript
+// Types pour les mesures de poids
+interface WeightMeasurement {
+  id: number;
+  petId: number;
+  weight: number;
+  date: Date;
+}
 
-## 🤝 Contribution
+// Types pour les traitements
+interface Treatment {
+  id: number;
+  petId: number;
+  type: TreatmentType;
+  startDate: Date;
+  endDate?: Date;
+  notes?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
 
-1. Fork le projet
-2. Créer une branche (`git checkout -b feature/AmazingFeature`)
-3. Commit les changements (`git commit -m 'Add some AmazingFeature'`)
-4. Push vers la branche (`git push origin feature/AmazingFeature`)
-5. Ouvrir une Pull Request
+interface Surgery extends Treatment {
+  procedure: string;
+  surgeon: Staff;
+  preOpNotes?: string;
+  postOpNotes?: string;
+}
 
-## 📫 Support
-
-Pour toute question ou problème :
-1. Consulter la documentation
-2. Ouvrir une issue sur GitHub
-3. Contacter l'équipe de développement
-
-## 📅 Maintenance
-
-- Mises à jour régulières des dépendances
-- Revue de code systématique
-- Tests automatisés
-- Monitoring des performances 
+interface Reminder {
+  id: number;
+  treatmentId: number;
+  date: Date;
+  message: string;
+  isCompleted: boolean;
+}
+```
 
 ## 🎨 Directives UX/UI
 
@@ -359,4 +466,25 @@ Pour toute question ou problème :
    - Tests utilisateurs réguliers
    - Heatmaps et analytics
    - A/B testing sur les nouvelles fonctionnalités
-   - Feedback utilisateur intégré 
+   - Feedback utilisateur intégré
+
+## 📫 Support et Contribution
+
+Pour toute question ou problème :
+1. Consulter la documentation
+2. Ouvrir une issue sur GitHub
+3. Contacter l'équipe de développement
+
+### Contribution
+1. Fork le projet
+2. Créer une branche (`git checkout -b feature/AmazingFeature`)
+3. Commit les changements (`git commit -m 'Add some AmazingFeature'`)
+4. Push vers la branche (`git push origin feature/AmazingFeature`)
+5. Ouvrir une Pull Request
+
+## 📅 Maintenance
+
+- Mises à jour régulières des dépendances
+- Revue de code systématique
+- Tests automatisés
+- Monitoring des performances 

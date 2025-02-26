@@ -46,8 +46,23 @@ export const PetFormWithDetails: React.FC<PetFormProps> = ({
   useEffect(() => {
     if (initialData?.id) {
       loadWeightHistory(initialData.id);
+      loadLatestWeight(initialData.id);
     }
   }, [initialData?.id]);
+
+  const loadLatestWeight = async (petId: number) => {
+    try {
+      const latestWeight = await weightService.getLatestWeight(petId);
+      if (latestWeight) {
+        setFormData(prev => ({
+          ...prev,
+          weight: latestWeight.weight
+        }));
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement du dernier poids:', error);
+    }
+  };
 
   const loadWeightHistory = async (petId: number) => {
     try {

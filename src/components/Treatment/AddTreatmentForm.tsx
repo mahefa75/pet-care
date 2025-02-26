@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { TreatmentType, TreatmentStatus } from '../../types/medical';
 import { TreatmentService } from '../../services/treatment.service';
+import { VeterinarianService, Veterinarian } from '../../services/veterinarian.service';
 
 interface AddTreatmentFormProps {
   petId: number;
@@ -9,6 +10,7 @@ interface AddTreatmentFormProps {
 }
 
 const treatmentService = new TreatmentService();
+const veterinarianService = new VeterinarianService();
 
 export const AddTreatmentForm: React.FC<AddTreatmentFormProps> = ({
   petId,
@@ -18,13 +20,14 @@ export const AddTreatmentForm: React.FC<AddTreatmentFormProps> = ({
   const [type, setType] = useState<TreatmentType>(TreatmentType.CHECKUP);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [veterinarians, setVeterinarians] = useState<Veterinarian[]>([]);
+  const [selectedVeterinarianId, setSelectedVeterinarianId] = useState<number | ''>('');
 
   // Champs communs
   const [name, setName] = useState('');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [nextDueDate, setNextDueDate] = useState('');
   const [notes, setNotes] = useState('');
-  const veterinarianId = 1; // À remplacer par une vraie liste plus tard
 
   // Champs spécifiques
   const [disease, setDisease] = useState('');
@@ -45,8 +48,30 @@ export const AddTreatmentForm: React.FC<AddTreatmentFormProps> = ({
   const [anesthesia, setAnesthesia] = useState('');
   const [recovery, setRecovery] = useState('');
 
+  useEffect(() => {
+    loadVeterinarians();
+  }, []);
+
+  const loadVeterinarians = async () => {
+    try {
+      const data = await veterinarianService.getVeterinarians();
+      setVeterinarians(data);
+      if (data.length > 0) {
+        setSelectedVeterinarianId(data[0].id);
+      }
+    } catch (err) {
+      console.error('Erreur lors du chargement des vétérinaires:', err);
+      setError('Erreur lors du chargement des vétérinaires');
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!selectedVeterinarianId) {
+      setError('Veuillez sélectionner un vétérinaire');
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
@@ -57,7 +82,7 @@ export const AddTreatmentForm: React.FC<AddTreatmentFormProps> = ({
         date: new Date(date),
         nextDueDate: nextDueDate ? new Date(nextDueDate) : undefined,
         notes,
-        veterinarianId,
+        veterinarianId: Number(selectedVeterinarianId),
         status: TreatmentStatus.PENDING,
       };
 
@@ -411,9 +436,11 @@ export const AddTreatmentForm: React.FC<AddTreatmentFormProps> = ({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="space-y-2">
-        <label className="block text-sm font-medium text-gray-700">
-          Type de traitement
+      <div className="grid grid-cols-1 gap-6">
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Type de traitement
+          </label>
           <select
             value={type}
             onChange={(e) => setType(e.target.value as TreatmentType)}
@@ -426,12 +453,31 @@ export const AddTreatmentForm: React.FC<AddTreatmentFormProps> = ({
               </option>
             ))}
           </select>
-        </label>
-      </div>
+        </div>
 
-      <div className="space-y-2">
-        <label className="block text-sm font-medium text-gray-700">
-          Nom/Description
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Vétérinaire
+          </label>
+          <select
+            value={selectedVeterinarianId}
+            onChange={(e) => setSelectedVeterinarianId(e.target.value ? Number(e.target.value) : '')}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            required
+          >
+            <option value="">Sélectionner un vétérinaire</option>
+            {veterinarians.map((vet) => (
+              <option key={vet.id} value={vet.id}>
+                {vet.name}{vet.speciality ? ` (${vet.speciality})` : ''}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Nom du traitement
+          </label>
           <input
             type="text"
             value={name}
@@ -439,53 +485,51 @@ export const AddTreatmentForm: React.FC<AddTreatmentFormProps> = ({
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             required
           />
-        </label>
-      </div>
+        </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
+        <div>
           <label className="block text-sm font-medium text-gray-700">
             Date
-            <input
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              required
-            />
           </label>
+          <input
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            required
+          />
         </div>
-        <div className="space-y-2">
+
+        <div>
           <label className="block text-sm font-medium text-gray-700">
-            Prochain rendez-vous
-            <input
-              type="date"
-              value={nextDueDate}
-              onChange={(e) => setNextDueDate(e.target.value)}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            />
+            Prochaine échéance
           </label>
+          <input
+            type="date"
+            value={nextDueDate}
+            onChange={(e) => setNextDueDate(e.target.value)}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            min={date}
+          />
         </div>
-      </div>
 
-      {renderSpecificFields()}
-
-      <div className="space-y-2">
-        <label className="block text-sm font-medium text-gray-700">
-          Notes
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Notes
+          </label>
           <textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             rows={3}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
           />
-        </label>
+        </div>
+
+        {renderSpecificFields()}
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative">
-          {error}
-        </div>
+        <div className="text-red-600 text-sm">{error}</div>
       )}
 
       <div className="flex justify-end space-x-3">
@@ -493,8 +537,7 @@ export const AddTreatmentForm: React.FC<AddTreatmentFormProps> = ({
           <button
             type="button"
             onClick={onCancel}
-            className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 
-                     bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
           >
             Annuler
           </button>
@@ -502,11 +545,9 @@ export const AddTreatmentForm: React.FC<AddTreatmentFormProps> = ({
         <button
           type="submit"
           disabled={loading}
-          className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white 
-                   bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500
-                   disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
         >
-          {loading ? 'Enregistrement...' : 'Enregistrer'}
+          {loading ? 'Enregistrement...' : 'Ajouter le traitement'}
         </button>
       </div>
     </form>
