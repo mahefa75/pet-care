@@ -140,26 +140,38 @@ export const PetCard: React.FC<PetCardProps> = ({
         className="bg-white rounded-lg shadow p-4 hover:shadow-md transition-shadow cursor-pointer relative group"
       >
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-4">
             {pet.photoUrl ? (
               <img
                 src={pet.photoUrl}
                 alt={pet.name}
-                className="h-12 w-12 rounded-full object-cover"
+                className="h-16 w-16 rounded-lg object-cover"
               />
             ) : (
-              <div className="h-12 w-12 rounded-full bg-gray-100 flex items-center justify-center">
-                <PhotoIcon className="h-6 w-6 text-gray-400" />
+              <div className="h-16 w-16 rounded-lg bg-gray-100 flex items-center justify-center">
+                <PhotoIcon className="h-8 w-8 text-gray-400" />
               </div>
             )}
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900">{pet.name}</h3>
-              <p className="text-sm text-gray-500">{pet.species} - {pet.breed}</p>
+            <div className="flex-1">
+              <div className="flex items-center gap-3">
+                <h3 className="text-lg font-semibold text-gray-900">{pet.name}</h3>
+                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(pet.status)}`}>
+                  {pet.status}
+                </span>
+              </div>
+              <p className="text-sm text-gray-600 mt-1">{pet.species} - {pet.breed}</p>
+              <div className="grid grid-cols-2 gap-4 mt-2">
+                <div>
+                  <p className="text-xs text-gray-500">Âge</p>
+                  <p className="text-sm text-gray-900">{calculateAge(pet.birthDate)}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500">Poids</p>
+                  <div className="text-sm">{renderWeight()}</div>
+                </div>
+              </div>
             </div>
           </div>
-          <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(pet.status)}`}>
-            {pet.status}
-          </span>
         </div>
         {onDelete && (
           <button
