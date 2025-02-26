@@ -7,6 +7,7 @@ import { Offcanvas } from '../components/UI/Offcanvas';
 import { PetService } from '../services/pet.service';
 import { Timeline } from '../components/Timeline/Timeline';
 import { HealthAdviceCard } from '../components/Health/HealthAdviceCard';
+import { AppointmentList } from '../components/Appointment/AppointmentList';
 
 const MedicalPage: React.FC = () => {
   const [activeForm, setActiveForm] = useState<'grooming' | 'health' | null>(null);
@@ -99,6 +100,17 @@ const MedicalPage: React.FC = () => {
       </div>
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        {/* Section des rendez-vous */}
+        <div className="bg-white rounded-lg shadow-sm p-6">
+          <h2 className="text-xl font-semibold mb-4">Rendez-vous à venir</h2>
+          <AppointmentList 
+            onUpdate={() => {
+              // Ne rien faire ici, le composant gère son propre état
+              console.log('Appointment updated');
+            }} 
+          />
+        </div>
+
         {/* Section des toilettages à venir */}
         <div className="bg-white rounded-lg shadow-sm p-6">
           <h2 className="text-xl font-semibold mb-4">Toilettages à venir</h2>
@@ -121,52 +133,52 @@ const MedicalPage: React.FC = () => {
             )}
           </div>
         </div>
+      </div>
 
-        {/* Section des événements de santé actifs */}
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <h2 className="text-xl font-semibold mb-4">Événements de santé actifs</h2>
-          <div className="space-y-4">
-            {isLoading ? (
-              <div className="flex justify-center items-center py-4">
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
-                <span className="ml-2 text-gray-600">Chargement...</span>
-              </div>
-            ) : activeHealthEvents.length === 0 ? (
-              <p className="text-gray-500">Aucun événement de santé actif</p>
-            ) : (
-              activeHealthEvents.map((event) => (
-                <div key={event.id}>
-                  <div
-                    className={`border-l-4 pl-4 py-2 ${
-                      event.severity === 'high'
-                        ? 'border-red-500'
-                        : event.severity === 'medium'
-                        ? 'border-yellow-500'
-                        : 'border-green-500'
-                    }`}
-                  >
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <p className="font-medium">{event.petName} - {event.type}</p>
-                        <p className="text-sm text-gray-600">{event.description}</p>
-                        <p className="text-sm text-gray-500">
-                          Depuis le: {new Date(event.date).toLocaleDateString()}
-                        </p>
-                      </div>
-                      {event.pet && (
-                        <HealthAdviceCard 
-                          pet={event.pet} 
-                          event={event}
-                          key={`advice-${event.id}-${refreshKey}`}
-                          onEventUpdate={handleEventUpdate}
-                        />
-                      )}
+      {/* Section des événements de santé actifs */}
+      <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
+        <h2 className="text-xl font-semibold mb-4">Événements de santé actifs</h2>
+        <div className="space-y-4">
+          {isLoading ? (
+            <div className="flex justify-center items-center py-4">
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+              <span className="ml-2 text-gray-600">Chargement...</span>
+            </div>
+          ) : activeHealthEvents.length === 0 ? (
+            <p className="text-gray-500">Aucun événement de santé actif</p>
+          ) : (
+            activeHealthEvents.map((event) => (
+              <div key={event.id}>
+                <div
+                  className={`border-l-4 pl-4 py-2 ${
+                    event.severity === 'high'
+                      ? 'border-red-500'
+                      : event.severity === 'medium'
+                      ? 'border-yellow-500'
+                      : 'border-green-500'
+                  }`}
+                >
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="font-medium">{event.petName} - {event.type}</p>
+                      <p className="text-sm text-gray-600">{event.description}</p>
+                      <p className="text-sm text-gray-500">
+                        Depuis le: {new Date(event.date).toLocaleDateString()}
+                      </p>
                     </div>
+                    {event.pet && (
+                      <HealthAdviceCard 
+                        pet={event.pet} 
+                        event={event}
+                        key={`advice-${event.id}-${refreshKey}`}
+                        onEventUpdate={handleEventUpdate}
+                      />
+                    )}
                   </div>
                 </div>
-              ))
-            )}
-          </div>
+              </div>
+            ))
+          )}
         </div>
       </div>
 

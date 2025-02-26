@@ -377,18 +377,14 @@ export const DashboardPage: React.FC = () => {
               <>
                 <div className="divide-y divide-gray-100">
                   {pets.map(pet => (
-                    <div key={pet.id} className="py-3 first:pt-0 last:pb-0">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="h-2 w-2 rounded-full bg-blue-600"></span>
-                        <h3 className="font-medium text-gray-900">{pet.name}</h3>
-                      </div>
-                      <UpcomingReminders
-                        petId={pet.id}
-                        onReminderComplete={() => loadData()}
-                        onReminderCancel={() => loadData()}
-                        onHasReminders={hasReminders => handleHasReminders(pet.id, hasReminders)}
-                      />
-                    </div>
+                    <UpcomingReminders
+                      key={pet.id}
+                      petId={pet.id}
+                      petName={pet.name}
+                      onReminderComplete={() => loadData()}
+                      onReminderCancel={() => loadData()}
+                      onHasReminders={hasReminders => handleHasReminders(pet.id, hasReminders)}
+                    />
                   ))}
                 </div>
                 {!hasAnyReminders && (
