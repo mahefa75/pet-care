@@ -1,7 +1,20 @@
 import { createClient } from '@supabase/supabase-js';
+import { configService } from '../services/config.service';
 
-// Valeurs par défaut pour le développement
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'http://localhost:54321';
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'dummy-key';
+// Créer le client Supabase avec la configuration
+const getSupabaseClient = () => {
+  const config = configService.getSupabaseConfig();
+  if (!config) {
+    console.warn('Supabase configuration not found. Some features may be limited.');
+    return null;
+  }
 
-export const supabase = createClient(supabaseUrl, supabaseKey);
+  return createClient(config.supabaseUrl, config.supabaseKey);
+};
+
+export const supabase = getSupabaseClient();
+
+// Fonction pour réinitialiser le client Supabase
+export const reinitializeSupabase = () => {
+  return getSupabaseClient();
+};

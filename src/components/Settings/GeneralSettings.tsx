@@ -1,38 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import { configService } from '../../services/config.service';
 import { CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/solid';
-import { reinitializeFirebase } from '../../lib/firebase';
+import { reinitializeSupabase } from '../../lib/supabase';
 
 interface ApiKeys {
-  VITE_FIREBASE_API_KEY: string;
-  VITE_FIREBASE_AUTH_DOMAIN: string;
-  VITE_FIREBASE_PROJECT_ID: string;
-  VITE_FIREBASE_STORAGE_BUCKET: string;
-  VITE_FIREBASE_MESSAGING_SENDER_ID: string;
-  VITE_FIREBASE_APP_ID: string;
-  VITE_FIREBASE_MEASUREMENT_ID: string;
+  VITE_SUPABASE_URL: string;
+  VITE_SUPABASE_ANON_KEY: string;
   VITE_GEMINI_API_KEY: string;
 }
 
 export const GeneralSettings: React.FC = () => {
   const [apiKeys, setApiKeys] = useState<ApiKeys>({
-    VITE_FIREBASE_API_KEY: '',
-    VITE_FIREBASE_AUTH_DOMAIN: '',
-    VITE_FIREBASE_PROJECT_ID: '',
-    VITE_FIREBASE_STORAGE_BUCKET: '',
-    VITE_FIREBASE_MESSAGING_SENDER_ID: '',
-    VITE_FIREBASE_APP_ID: '',
-    VITE_FIREBASE_MEASUREMENT_ID: '',
+    VITE_SUPABASE_URL: '',
+    VITE_SUPABASE_ANON_KEY: '',
     VITE_GEMINI_API_KEY: ''
   });
 
   const [configStatus, setConfigStatus] = useState({
-    firebase: false,
+    supabase: false,
     gemini: false
   });
 
   const [testStatus, setTestStatus] = useState({
-    firebase: { status: 'idle' as 'idle' | 'testing' | 'success' | 'error', message: '' },
+    supabase: { status: 'idle' as 'idle' | 'testing' | 'success' | 'error', message: '' },
     gemini: { status: 'idle' as 'idle' | 'testing' | 'success' | 'error', message: '' }
   });
 
@@ -59,8 +49,8 @@ export const GeneralSettings: React.FC = () => {
     localStorage.setItem('apiKeys', JSON.stringify(newApiKeys));
     setTimeout(() => {
       updateConfigStatus();
-      if (key.startsWith('VITE_FIREBASE')) {
-        reinitializeFirebase();
+      if (key.startsWith('VITE_SUPABASE')) {
+        reinitializeSupabase();
       }
     }, 100);
   };
@@ -89,7 +79,7 @@ export const GeneralSettings: React.FC = () => {
           setApiKeys(importedConfig);
           localStorage.setItem('apiKeys', JSON.stringify(importedConfig));
           updateConfigStatus();
-          reinitializeFirebase();
+          reinitializeSupabase();
         } catch (error) {
           alert('Erreur lors de l\'import du fichier de configuration');
         }
@@ -102,54 +92,30 @@ export const GeneralSettings: React.FC = () => {
     if (window.confirm('Êtes-vous sûr de vouloir réinitialiser la configuration ? Cette action est irréversible.')) {
       localStorage.removeItem('apiKeys');
       setApiKeys({
-        VITE_FIREBASE_API_KEY: '',
-        VITE_FIREBASE_AUTH_DOMAIN: '',
-        VITE_FIREBASE_PROJECT_ID: '',
-        VITE_FIREBASE_STORAGE_BUCKET: '',
-        VITE_FIREBASE_MESSAGING_SENDER_ID: '',
-        VITE_FIREBASE_APP_ID: '',
-        VITE_FIREBASE_MEASUREMENT_ID: '',
+        VITE_SUPABASE_URL: '',
+        VITE_SUPABASE_ANON_KEY: '',
         VITE_GEMINI_API_KEY: ''
       });
       updateConfigStatus();
-      reinitializeFirebase();
+      reinitializeSupabase();
     }
   };
 
-  const testFirebaseConnection = async () => {
+  const testSupabaseConnection = async () => {
     setTestStatus(prev => ({
       ...prev,
-      firebase: { status: 'testing', message: 'Test en cours...' }
+      supabase: { status: 'testing', message: 'Test en cours...' }
     }));
     try {
-      await configService.testFirebaseConnection();
+      await configService.testSupabaseConnection();
       setTestStatus(prev => ({
         ...prev,
-        firebase: { status: 'success', message: 'Connexion réussie' }
+        supabase: { status: 'success', message: 'Connexion réussie' }
       }));
     } catch (error) {
       setTestStatus(prev => ({
         ...prev,
-        firebase: { status: 'error', message: 'Échec de la connexion' }
-      }));
-    }
-  };
-
-  const testGeminiConnection = async () => {
-    setTestStatus(prev => ({
-      ...prev,
-      gemini: { status: 'testing', message: 'Test en cours...' }
-    }));
-    try {
-      await configService.testGeminiConnection();
-      setTestStatus(prev => ({
-        ...prev,
-        gemini: { status: 'success', message: 'Connexion réussie' }
-      }));
-    } catch (error) {
-      setTestStatus(prev => ({
-        ...prev,
-        gemini: { status: 'error', message: 'Échec de la connexion' }
+        supabase: { status: 'error', message: 'Échec de la connexion' }
       }));
     }
   };
@@ -162,18 +128,15 @@ export const GeneralSettings: React.FC = () => {
     );
   };
 
-  const renderTestStatus = (service: 'firebase' | 'gemini') => {
+  const renderTestStatus = (service: 'supabase' | 'gemini') => {
     const status = testStatus[service];
     if (status.status === 'idle') return null;
-    
-    const colors = {
-      testing: 'text-blue-600',
-      success: 'text-green-600',
-      error: 'text-red-600'
-    };
-
     return (
-      <span className={`text-sm ml-2 ${colors[status.status]}`}>
+      <span className={`ml-2 text-sm ${
+        status.status === 'success' ? 'text-green-600' :
+        status.status === 'error' ? 'text-red-600' :
+        'text-gray-600'
+      }`}>
         {status.message}
       </span>
     );
@@ -185,8 +148,8 @@ export const GeneralSettings: React.FC = () => {
         <h2 className="text-xl font-semibold">État de la configuration</h2>
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-600">Firebase</span>
-            {renderStatusIcon(configStatus.firebase)}
+            <span className="text-sm text-gray-600">Supabase</span>
+            {renderStatusIcon(configStatus.supabase)}
           </div>
           <div className="flex items-center gap-2">
             <span className="text-sm text-gray-600">Gemini</span>
@@ -221,126 +184,59 @@ export const GeneralSettings: React.FC = () => {
 
       <div>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold">Configuration Firebase</h2>
+          <h2 className="text-xl font-semibold">Configuration Supabase</h2>
           <button
-            onClick={testFirebaseConnection}
-            disabled={!configStatus.firebase || testStatus.firebase.status === 'testing'}
+            onClick={testSupabaseConnection}
+            disabled={!configStatus.supabase || testStatus.supabase.status === 'testing'}
             className="px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-md hover:bg-blue-100 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Tester la connexion
-            {renderTestStatus('firebase')}
+            {renderTestStatus('supabase')}
           </button>
         </div>
         <div className="grid grid-cols-1 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              API Key
+              URL Supabase
+            </label>
+            <input
+              type="text"
+              value={apiKeys.VITE_SUPABASE_URL}
+              onChange={(e) => handleChange('VITE_SUPABASE_URL', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Clé anonyme Supabase
             </label>
             <input
               type="password"
-              value={apiKeys.VITE_FIREBASE_API_KEY}
-              onChange={(e) => handleChange('VITE_FIREBASE_API_KEY', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Auth Domain
-            </label>
-            <input
-              type="text"
-              value={apiKeys.VITE_FIREBASE_AUTH_DOMAIN}
-              onChange={(e) => handleChange('VITE_FIREBASE_AUTH_DOMAIN', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Project ID
-            </label>
-            <input
-              type="text"
-              value={apiKeys.VITE_FIREBASE_PROJECT_ID}
-              onChange={(e) => handleChange('VITE_FIREBASE_PROJECT_ID', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Storage Bucket
-            </label>
-            <input
-              type="text"
-              value={apiKeys.VITE_FIREBASE_STORAGE_BUCKET}
-              onChange={(e) => handleChange('VITE_FIREBASE_STORAGE_BUCKET', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Messaging Sender ID
-            </label>
-            <input
-              type="text"
-              value={apiKeys.VITE_FIREBASE_MESSAGING_SENDER_ID}
-              onChange={(e) => handleChange('VITE_FIREBASE_MESSAGING_SENDER_ID', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              App ID
-            </label>
-            <input
-              type="text"
-              value={apiKeys.VITE_FIREBASE_APP_ID}
-              onChange={(e) => handleChange('VITE_FIREBASE_APP_ID', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Measurement ID
-            </label>
-            <input
-              type="text"
-              value={apiKeys.VITE_FIREBASE_MEASUREMENT_ID}
-              onChange={(e) => handleChange('VITE_FIREBASE_MEASUREMENT_ID', e.target.value)}
+              value={apiKeys.VITE_SUPABASE_ANON_KEY}
+              onChange={(e) => handleChange('VITE_SUPABASE_ANON_KEY', e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
         </div>
       </div>
 
-      <div className="border-t pt-6">
+      <div>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold">Configuration Gemini</h2>
-          <button
-            onClick={testGeminiConnection}
-            disabled={!configStatus.gemini || testStatus.gemini.status === 'testing'}
-            className="px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-md hover:bg-blue-100 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Tester la connexion
-            {renderTestStatus('gemini')}
-          </button>
         </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            API Key
-          </label>
-          <input
-            type="password"
-            value={apiKeys.VITE_GEMINI_API_KEY}
-            onChange={(e) => handleChange('VITE_GEMINI_API_KEY', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-          />
+        <div className="grid grid-cols-1 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Clé API Gemini
+            </label>
+            <input
+              type="password"
+              value={apiKeys.VITE_GEMINI_API_KEY}
+              onChange={(e) => handleChange('VITE_GEMINI_API_KEY', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
         </div>
-      </div>
-
-      <div className="border-t pt-6">
-        <p className="text-sm text-gray-500 mb-4">
-          Note: Les modifications sont automatiquement sauvegardées. Un redémarrage de l'application peut être nécessaire pour appliquer certains changements.
-        </p>
       </div>
     </div>
   );
