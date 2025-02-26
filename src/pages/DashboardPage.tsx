@@ -18,12 +18,13 @@ import { WeightService } from '../services/weight.service';
 import { PetService } from '../services/pet.service';
 import { Pet, WeightMeasurement } from '../types/pet';
 import { UpcomingReminders } from '../components/Treatment/UpcomingReminders';
-import { CalendarIcon, ChartBarIcon, PresentationChartLineIcon } from '@heroicons/react/24/outline';
+import { CalendarIcon, ChartBarIcon, PresentationChartLineIcon, PlusIcon } from '@heroicons/react/24/outline';
 import { ArrowTrendingUpIcon } from '@heroicons/react/24/solid';
 import { GroupedFoodRecommendation } from '../components/Pet/FoodRecommendation';
 import { BulkWeightEntry } from '../components/Weight/BulkWeightEntry';
 import { Button } from '../components/UI/Button';
 import { addDays } from 'date-fns';
+import { AddReminderOffcanvas } from '../components/Treatment/AddReminderOffcanvas';
 
 ChartJS.register(
   CategoryScale,
@@ -73,6 +74,7 @@ export const DashboardPage: React.FC = () => {
   const remindersMap = new Map<number, boolean>();
   const [isBulkWeightEntryOpen, setIsBulkWeightEntryOpen] = useState(false);
   const [showTrendlines, setShowTrendlines] = useState(false);
+  const [isAddReminderOpen, setIsAddReminderOpen] = useState(false);
 
   const handleHasReminders = (petId: number, hasReminders: boolean) => {
     remindersMap.set(petId, hasReminders);
@@ -371,6 +373,13 @@ export const DashboardPage: React.FC = () => {
           <div className="flex items-center gap-2 mb-4">
             <CalendarIcon className="h-5 w-5 text-blue-600" />
             <h2 className="text-xl font-semibold text-gray-900">Rappels</h2>
+            <button
+              onClick={() => setIsAddReminderOpen(true)}
+              className="ml-auto p-1 rounded-full text-blue-600 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              title="Ajouter un rappel"
+            >
+              <PlusIcon className="h-5 w-5" />
+            </button>
           </div>
           <div className="space-y-4">
             {pets.length > 0 ? (
@@ -407,6 +416,13 @@ export const DashboardPage: React.FC = () => {
         isOpen={isBulkWeightEntryOpen}
         onClose={() => setIsBulkWeightEntryOpen(false)}
         onSave={loadData}
+      />
+
+      <AddReminderOffcanvas
+        isOpen={isAddReminderOpen}
+        onClose={() => setIsAddReminderOpen(false)}
+        pets={pets}
+        onSuccess={loadData}
       />
     </div>
   );
