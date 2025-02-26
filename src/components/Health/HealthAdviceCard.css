@@ -1,0 +1,42 @@
+/* Styles spécifiques pour le composant HealthAdviceCard */
+@layer components {
+  .health-advice-card {
+    @apply my-4 bg-white rounded-lg shadow-md p-4;
+  }
+
+  .health-advice-expand-button {
+    @apply w-full flex items-center justify-between text-gray-600 hover:text-gray-800;
+  }
+
+  .health-advice-content {
+    @apply mt-4 space-y-4;
+  }
+
+  .health-advice-section {
+    @apply mb-4;
+  }
+
+  .health-advice-section-title {
+    @apply font-semibold mb-2 text-gray-700;
+  }
+
+  .health-advice-list {
+    @apply list-disc pl-5 space-y-2;
+  }
+
+  .health-advice-list-item {
+    @apply text-gray-600;
+  }
+
+  .health-advice-alert {
+    @apply bg-red-50 p-4 rounded-md mt-4;
+  }
+
+  .health-advice-alert-title {
+    @apply text-red-800 font-semibold mb-2;
+  }
+
+  .health-advice-alert-text {
+    @apply text-red-700;
+  }
+} 
