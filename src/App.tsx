@@ -4,11 +4,61 @@ import { PetsPage } from './pages/PetsPage';
 import { PetDetailsPage } from './pages/PetDetailsPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { SettingsPage } from './pages/SettingsPage';
-import { Cog6ToothIcon, Bars3Icon } from '@heroicons/react/24/outline';
+import { Cog6ToothIcon, Bars3Icon, HomeIcon, BeakerIcon } from '@heroicons/react/24/outline';
+import { PawPrint } from 'lucide-react';
 import MedicalPage from './pages/MedicalPage';
 import { PetHealthPage } from './pages/PetHealthPage';
 import ConnectionStatus from './components/common/ConnectionStatus';
 import { Offcanvas } from './components/UI/Offcanvas';
+
+// Composant de navigation mobile en bas de l'écran
+const MobileNavBar: React.FC = () => {
+  const location = useLocation();
+  
+  return (
+    <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50">
+      <div className="flex justify-around items-center h-16">
+        <Link
+          to="/"
+          className={`flex flex-col items-center justify-center w-full h-full ${
+            location.pathname === '/' ? 'text-blue-600' : 'text-gray-500'
+          }`}
+        >
+          <HomeIcon className="h-6 w-6" />
+          <span className="text-xs mt-1">Accueil</span>
+        </Link>
+        <Link
+          to="/pets"
+          className={`flex flex-col items-center justify-center w-full h-full ${
+            location.pathname === '/pets' || location.pathname.startsWith('/pet/') 
+              ? 'text-blue-600' : 'text-gray-500'
+          }`}
+        >
+          <PawPrint className="h-6 w-6" />
+          <span className="text-xs mt-1">Animaux</span>
+        </Link>
+        <Link
+          to="/medical"
+          className={`flex flex-col items-center justify-center w-full h-full ${
+            location.pathname === '/medical' ? 'text-blue-600' : 'text-gray-500'
+          }`}
+        >
+          <BeakerIcon className="h-6 w-6" />
+          <span className="text-xs mt-1">Soins</span>
+        </Link>
+        <Link
+          to="/settings"
+          className={`flex flex-col items-center justify-center w-full h-full ${
+            location.pathname === '/settings' ? 'text-blue-600' : 'text-gray-500'
+          }`}
+        >
+          <Cog6ToothIcon className="h-6 w-6" />
+          <span className="text-xs mt-1">Réglages</span>
+        </Link>
+      </div>
+    </div>
+  );
+};
 
 const Navigation: React.FC = () => {
   const location = useLocation();
@@ -19,7 +69,7 @@ const Navigation: React.FC = () => {
   };
   
   return (
-    <nav className="bg-white shadow-lg">
+    <nav className="bg-white shadow-lg fixed top-0 left-0 right-0 z-50">
       <div className="max-w-7xl mx-auto px-4">
         <div className="flex justify-between h-16">
           <div className="flex">
@@ -51,7 +101,7 @@ const Navigation: React.FC = () => {
             </div>
           </div>
           
-          {/* Mobile menu button */}
+          {/* Mobile menu button - masqué car remplacé par la barre de navigation en bas */}
           <div className="flex items-center md:hidden">
             <button
               onClick={toggleMenu}
@@ -139,7 +189,7 @@ const App: React.FC = () => {
       <div className="min-h-screen bg-gray-50">
         <Navigation />
         <ConnectionStatus />
-        <main>
+        <main className="pt-16 pb-16 md:pb-0"> {/* Ajout de padding-bottom pour la barre de navigation mobile */}
           <Routes>
             <Route path="/" element={<DashboardPage />} />
             <Route path="/pets" element={<PetsPage />} />
@@ -149,6 +199,7 @@ const App: React.FC = () => {
             <Route path="/pet/:id/health" element={<PetHealthPage />} />
           </Routes>
         </main>
+        <MobileNavBar /> {/* Ajout de la barre de navigation mobile */}
       </div>
     </Router>
   );
