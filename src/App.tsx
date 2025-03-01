@@ -4,10 +4,11 @@ import { PetsPage } from './pages/PetsPage';
 import { PetDetailsPage } from './pages/PetDetailsPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { SettingsPage } from './pages/SettingsPage';
-import { Cog6ToothIcon, Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
+import { Cog6ToothIcon, Bars3Icon } from '@heroicons/react/24/outline';
 import MedicalPage from './pages/MedicalPage';
 import { PetHealthPage } from './pages/PetHealthPage';
 import ConnectionStatus from './components/common/ConnectionStatus';
+import { Offcanvas } from './components/UI/Offcanvas';
 
 const Navigation: React.FC = () => {
   const location = useLocation();
@@ -58,11 +59,7 @@ const Navigation: React.FC = () => {
               aria-expanded="false"
             >
               <span className="sr-only">Ouvrir le menu principal</span>
-              {isMenuOpen ? (
-                <XMarkIcon className="block h-6 w-6" aria-hidden="true" />
-              ) : (
-                <Bars3Icon className="block h-6 w-6" aria-hidden="true" />
-              )}
+              <Bars3Icon className="block h-6 w-6" aria-hidden="true" />
             </button>
           </div>
           
@@ -79,15 +76,20 @@ const Navigation: React.FC = () => {
         </div>
       </div>
       
-      {/* Mobile menu, show/hide based on menu state */}
-      <div className={`${isMenuOpen ? 'block' : 'hidden'} md:hidden`}>
-        <div className="pt-2 pb-3 space-y-1">
+      {/* Mobile menu as Offcanvas */}
+      <Offcanvas 
+        isOpen={isMenuOpen} 
+        onClose={() => setIsMenuOpen(false)} 
+        title="Menu"
+        size="md"
+      >
+        <div className="space-y-4">
           <Link
             to="/"
             className={`${location.pathname === '/' 
               ? 'bg-blue-50 border-blue-500 text-blue-700' 
               : 'border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800'} 
-              block pl-3 pr-4 py-2 border-l-4 text-base font-medium`}
+              block pl-3 pr-4 py-3 border-l-4 text-base font-medium rounded-md`}
             onClick={() => setIsMenuOpen(false)}
           >
             Tableau de bord
@@ -97,7 +99,7 @@ const Navigation: React.FC = () => {
             className={`${location.pathname === '/pets' || location.pathname.startsWith('/pet/') 
               ? 'bg-blue-50 border-blue-500 text-blue-700' 
               : 'border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800'} 
-              block pl-3 pr-4 py-2 border-l-4 text-base font-medium`}
+              block pl-3 pr-4 py-3 border-l-4 text-base font-medium rounded-md`}
             onClick={() => setIsMenuOpen(false)}
           >
             Animaux
@@ -107,7 +109,7 @@ const Navigation: React.FC = () => {
             className={`${location.pathname === '/medical' 
               ? 'bg-blue-50 border-blue-500 text-blue-700' 
               : 'border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800'} 
-              block pl-3 pr-4 py-2 border-l-4 text-base font-medium`}
+              block pl-3 pr-4 py-3 border-l-4 text-base font-medium rounded-md`}
             onClick={() => setIsMenuOpen(false)}
           >
             Soins et suivis médicaux
@@ -117,16 +119,16 @@ const Navigation: React.FC = () => {
             className={`${location.pathname === '/settings' 
               ? 'bg-blue-50 border-blue-500 text-blue-700' 
               : 'border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800'} 
-              block pl-3 pr-4 py-2 border-l-4 text-base font-medium`}
+              block pl-3 pr-4 py-3 border-l-4 text-base font-medium rounded-md`}
             onClick={() => setIsMenuOpen(false)}
           >
             <div className="flex items-center">
-              <Cog6ToothIcon className="h-5 w-5 mr-1" />
+              <Cog6ToothIcon className="h-5 w-5 mr-2" />
               Paramètres
             </div>
           </Link>
         </div>
-      </div>
+      </Offcanvas>
     </nav>
   );
 };
