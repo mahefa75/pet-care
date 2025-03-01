@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { DataBackup } from '../components/Settings/DataBackup';
 import { FoodManagement } from '../components/Settings/FoodManagement';
-import { SupabaseSync } from '../components/Settings/SupabaseSync';
 import { GeneralSettings } from '../components/Settings/GeneralSettings';
 
 export const SettingsPage: React.FC = () => {
@@ -10,7 +9,6 @@ export const SettingsPage: React.FC = () => {
   const tabs = [
     { id: 'general', label: 'Général' },
     { id: 'backup', label: 'Sauvegarde des données' },
-    { id: 'supabase', label: 'Synchronisation Supabase' },
     { id: 'food', label: 'Alimentations' },
   ];
 
@@ -40,7 +38,6 @@ export const SettingsPage: React.FC = () => {
       <div className="bg-white rounded-lg p-6 shadow-sm">
         {activeTab === 'general' && <GeneralSettings />}
         {activeTab === 'backup' && <DataBackup />}
-        {activeTab === 'supabase' && <SupabaseSync />}
         {activeTab === 'food' && <FoodManagement />}
       </div>
     </div>

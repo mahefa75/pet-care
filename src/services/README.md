@@ -505,19 +505,6 @@ describe('PetCard', () => {
 - framer-motion: ^10.0.0 (pour les animations)
 - @fullcalendar/react: ^6.0.0 (pour le calendrier) 
 
-## 🔌 Intégration Supabase
-
-Le projet utilise Supabase comme backend. Voici la configuration :
-
-```typescript
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-export const supabase = createClient(supabaseUrl, supabaseKey);
-```
-
 ## 📦 Types Principaux
 
 ```typescript

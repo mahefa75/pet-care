@@ -24,11 +24,9 @@ PetCare est une application web développée en React avec TypeScript, conçue p
 - React Router pour la navigation
 - React Query pour la gestion des données
 - Axios pour les requêtes HTTP
-- Supabase comme backend
 - Firebase pour certaines fonctionnalités
 
 ### Backend
-- Supabase
 - PostgreSQL
 - API RESTful
 
@@ -269,8 +267,6 @@ export default defineConfig({
 Créer un fichier `.env` à la racine du projet :
 
 ```env
-VITE_SUPABASE_URL=votre_url_supabase
-VITE_SUPABASE_ANON_KEY=votre_clé_anon_supabase
 VITE_FIREBASE_CONFIG=votre_config_firebase
 VITE_API_URL=http://localhost:3000
 ```

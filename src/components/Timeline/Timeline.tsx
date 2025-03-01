@@ -247,7 +247,7 @@ export const Timeline: React.FC<TimelineProps> = ({ petId, months = 2 }) => {
               <div className="space-y-2 pt-8">
                 {group.events.map(event => (
                   <div
-                    key={event.id}
+                    key={`${event.id}-${event.type}-${format(event.date, 'yyyyMMddHHmmss')}`}
                     onClick={() => handleEditEvent(event)}
                     className={`bg-white border-l-2 pl-2 py-1 group relative hover:shadow-md transition-shadow cursor-pointer ${
                       event.type === 'health'

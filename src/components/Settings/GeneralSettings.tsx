@@ -1,28 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { configService } from '../../services/config.service';
 import { CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/solid';
-import { reinitializeSupabase } from '../../lib/supabase';
 
 interface ApiKeys {
-  VITE_SUPABASE_URL: string;
-  VITE_SUPABASE_ANON_KEY: string;
   VITE_GEMINI_API_KEY: string;
 }
 
 export const GeneralSettings: React.FC = () => {
   const [apiKeys, setApiKeys] = useState<ApiKeys>({
-    VITE_SUPABASE_URL: '',
-    VITE_SUPABASE_ANON_KEY: '',
     VITE_GEMINI_API_KEY: ''
   });
 
   const [configStatus, setConfigStatus] = useState({
-    supabase: false,
     gemini: false
   });
 
   const [testStatus, setTestStatus] = useState({
-    supabase: { status: 'idle' as 'idle' | 'testing' | 'success' | 'error', message: '' },
     gemini: { status: 'idle' as 'idle' | 'testing' | 'success' | 'error', message: '' }
   });
 
@@ -49,9 +42,6 @@ export const GeneralSettings: React.FC = () => {
     localStorage.setItem('apiKeys', JSON.stringify(newApiKeys));
     setTimeout(() => {
       updateConfigStatus();
-      if (key.startsWith('VITE_SUPABASE')) {
-        reinitializeSupabase();
-      }
     }, 100);
   };
 
@@ -79,7 +69,6 @@ export const GeneralSettings: React.FC = () => {
           setApiKeys(importedConfig);
           localStorage.setItem('apiKeys', JSON.stringify(importedConfig));
           updateConfigStatus();
-          reinitializeSupabase();
         } catch (error) {
           alert('Erreur lors de l\'import du fichier de configuration');
         }
@@ -92,31 +81,9 @@ export const GeneralSettings: React.FC = () => {
     if (window.confirm('Êtes-vous sûr de vouloir réinitialiser la configuration ? Cette action est irréversible.')) {
       localStorage.removeItem('apiKeys');
       setApiKeys({
-        VITE_SUPABASE_URL: '',
-        VITE_SUPABASE_ANON_KEY: '',
         VITE_GEMINI_API_KEY: ''
       });
       updateConfigStatus();
-      reinitializeSupabase();
-    }
-  };
-
-  const testSupabaseConnection = async () => {
-    setTestStatus(prev => ({
-      ...prev,
-      supabase: { status: 'testing', message: 'Test en cours...' }
-    }));
-    try {
-      await configService.testSupabaseConnection();
-      setTestStatus(prev => ({
-        ...prev,
-        supabase: { status: 'success', message: 'Connexion réussie' }
-      }));
-    } catch (error) {
-      setTestStatus(prev => ({
-        ...prev,
-        supabase: { status: 'error', message: 'Échec de la connexion' }
-      }));
     }
   };
 
@@ -128,29 +95,11 @@ export const GeneralSettings: React.FC = () => {
     );
   };
 
-  const renderTestStatus = (service: 'supabase' | 'gemini') => {
-    const status = testStatus[service];
-    if (status.status === 'idle') return null;
-    return (
-      <span className={`ml-2 text-sm ${
-        status.status === 'success' ? 'text-green-600' :
-        status.status === 'error' ? 'text-red-600' :
-        'text-gray-600'
-      }`}>
-        {status.message}
-      </span>
-    );
-  };
-
   return (
     <div className="space-y-6">
       <div className="mb-6 flex items-center justify-between">
         <h2 className="text-xl font-semibold">État de la configuration</h2>
         <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-600">Supabase</span>
-            {renderStatusIcon(configStatus.supabase)}
-          </div>
           <div className="flex items-center gap-2">
             <span className="text-sm text-gray-600">Gemini</span>
             {renderStatusIcon(configStatus.gemini)}
@@ -180,44 +129,6 @@ export const GeneralSettings: React.FC = () => {
         >
           Réinitialiser
         </button>
-      </div>
-
-      <div>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold">Configuration Supabase</h2>
-          <button
-            onClick={testSupabaseConnection}
-            disabled={!configStatus.supabase || testStatus.supabase.status === 'testing'}
-            className="px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-md hover:bg-blue-100 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Tester la connexion
-            {renderTestStatus('supabase')}
-          </button>
-        </div>
-        <div className="grid grid-cols-1 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              URL Supabase
-            </label>
-            <input
-              type="text"
-              value={apiKeys.VITE_SUPABASE_URL}
-              onChange={(e) => handleChange('VITE_SUPABASE_URL', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Clé anonyme Supabase
-            </label>
-            <input
-              type="password"
-              value={apiKeys.VITE_SUPABASE_ANON_KEY}
-              onChange={(e) => handleChange('VITE_SUPABASE_ANON_KEY', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-        </div>
       </div>
 
       <div>
