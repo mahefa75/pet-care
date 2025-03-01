@@ -149,10 +149,28 @@ export class SupabaseWeightService {
    * Convertit un enregistrement Supabase en objet WeightMeasurement
    */
   private mapToWeightMeasurement(data: any): WeightMeasurement {
+    // Fonction utilitaire pour créer une date sécurisée
+    const createSafeDate = (dateStr: string | null): Date => {
+      if (!dateStr) return new Date();
+      
+      try {
+        const date = new Date(dateStr);
+        // Vérifier si la date est valide
+        if (isNaN(date.getTime())) {
+          console.warn(`Date invalide détectée: ${dateStr}, utilisation de la date actuelle`);
+          return new Date();
+        }
+        return date;
+      } catch (error) {
+        console.warn(`Erreur lors de la conversion de la date: ${dateStr}`, error);
+        return new Date();
+      }
+    };
+
     return {
       id: data.id,
       petId: data.pet_id,
-      date: new Date(data.date),
+      date: createSafeDate(data.date),
       weight: Math.round(data.weight * 1000) / 1000,
       notes: data.notes || undefined,
       foods: data.foods || undefined

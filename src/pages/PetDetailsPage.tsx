@@ -7,9 +7,29 @@ import { WeightChart } from '../components/Pet/WeightChart';
 import { AddWeightForm } from '../components/Pet/AddWeightForm';
 import { WeightList } from '../components/Weight/WeightList';
 import { Pet, WeightMeasurement } from '../types/pet';
+import { isValid, format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
 const petService = new PetService();
 const weightService = new WeightService();
+
+/**
+ * Fonction utilitaire pour créer une date sécurisée
+ * @param dateInput Date à convertir (Date ou string)
+ * @returns Une date valide formatée en chaîne de caractères ou 'Non spécifiée' si invalide
+ */
+const formatSafeDate = (dateInput: Date | string | null | undefined): string => {
+  if (!dateInput) return 'Non spécifiée';
+  
+  try {
+    const date = dateInput instanceof Date ? dateInput : new Date(dateInput);
+    if (!isValid(date)) return 'Non spécifiée';
+    return format(date, 'dd/MM/yyyy', { locale: fr });
+  } catch (error) {
+    console.warn(`Erreur lors de la conversion de la date: ${dateInput}`, error);
+    return 'Non spécifiée';
+  }
+};
 
 export const PetDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -103,7 +123,7 @@ export const PetDetailsPage: React.FC = () => {
                   <div>
                     <dt className="text-sm font-medium text-gray-500">Date de naissance</dt>
                     <dd className="mt-1 text-sm text-gray-900">
-                      {pet.birthDate ? new Date(pet.birthDate).toLocaleDateString() : 'Non spécifiée'}
+                      {formatSafeDate(pet.birthDate)}
                     </dd>
                   </div>
                   <div>

@@ -3,6 +3,29 @@ import { ServiceFactory, StorageType } from './service-factory';
 import { db } from '../lib/db';
 
 /**
+ * Fonction utilitaire pour créer une date sécurisée
+ * @param dateStr Chaîne de date à convertir
+ * @param defaultDate Date par défaut à utiliser en cas d'erreur
+ * @returns Une date valide
+ */
+function createSafeDate(dateStr: string | null | undefined, defaultDate: Date = new Date()): Date {
+  if (!dateStr) return defaultDate;
+  
+  try {
+    const date = new Date(dateStr);
+    // Vérifier si la date est valide
+    if (isNaN(date.getTime())) {
+      console.warn(`Date invalide détectée: ${dateStr}, utilisation de la date par défaut`);
+      return defaultDate;
+    }
+    return date;
+  } catch (error) {
+    console.warn(`Erreur lors de la conversion de la date: ${dateStr}`, error);
+    return defaultDate;
+  }
+}
+
+/**
  * Service responsable de l'initialisation des données de l'application
  * Vérifie si l'application doit utiliser Supabase et charge les données si nécessaire
  */
@@ -120,14 +143,14 @@ export class DataInitializationService {
           name: pet.name,
           species: pet.species,
           breed: pet.breed,
-          birthDate: new Date(pet.birthdate),
+          birthDate: createSafeDate(pet.birthdate),
           weight: pet.weight || 0,
           status: pet.status || 'HEALTHY',
           ownerId: pet.owner_id || 0,
           photoUrl: pet.photo_url,
           notes: pet.notes,
-          createdAt: new Date(pet.created_at),
-          updatedAt: new Date(pet.updated_at)
+          createdAt: createSafeDate(pet.created_at),
+          updatedAt: createSafeDate(pet.updated_at)
         }));
         
         // Ajouter les animaux à la base locale
@@ -164,7 +187,7 @@ export class DataInitializationService {
         const dexieWeights = weights.map(weight => ({
           id: weight.id,
           petId: weight.pet_id,
-          date: new Date(weight.date),
+          date: createSafeDate(weight.date),
           weight: weight.weight,
           notes: weight.notes,
           foods: weight.foods
@@ -197,13 +220,13 @@ export class DataInitializationService {
           petId: treatment.pet_id,
           type: treatment.type,
           name: treatment.name,
-          date: new Date(treatment.date),
-          nextDueDate: treatment.next_due_date ? new Date(treatment.next_due_date) : undefined,
+          date: createSafeDate(treatment.date),
+          nextDueDate: treatment.next_due_date ? createSafeDate(treatment.next_due_date) : undefined,
           notes: treatment.notes,
           veterinarianId: treatment.veterinarian_id,
           status: treatment.status || 'COMPLETED',
-          createdAt: new Date(treatment.created_at),
-          updatedAt: new Date(treatment.updated_at)
+          createdAt: createSafeDate(treatment.created_at),
+          updatedAt: createSafeDate(treatment.updated_at)
         }));
         
         await db.treatments.bulkAdd(dexieTreatments);
@@ -236,11 +259,11 @@ export class DataInitializationService {
           petId: reminder.pet_id,
           treatmentId: reminder.treatment_id,
           type: reminder.type,
-          dueDate: new Date(reminder.due_date),
+          dueDate: createSafeDate(reminder.due_date),
           status: reminder.status,
           notified: reminder.notified,
-          createdAt: new Date(reminder.created_at),
-          updatedAt: new Date(reminder.updated_at)
+          createdAt: createSafeDate(reminder.created_at),
+          updatedAt: createSafeDate(reminder.updated_at)
         }));
         
         await db.reminders.bulkAdd(dexieReminders);

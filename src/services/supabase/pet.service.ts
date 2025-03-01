@@ -165,18 +165,36 @@ export class SupabasePetService {
    * Convertit un enregistrement Supabase en objet Pet
    */
   private mapToPet(data: any): Pet {
+    // Fonction utilitaire pour créer une date valide
+    const createSafeDate = (dateString: string | null): Date => {
+      if (!dateString) return new Date(); // Date par défaut si null
+      
+      try {
+        const date = new Date(dateString);
+        // Vérifier si la date est valide
+        if (isNaN(date.getTime())) {
+          console.warn(`Date invalide détectée: ${dateString}, utilisation de la date actuelle`);
+          return new Date();
+        }
+        return date;
+      } catch (error) {
+        console.warn(`Erreur lors de la conversion de la date: ${dateString}`, error);
+        return new Date();
+      }
+    };
+
     return {
       id: data.id,
       name: data.name,
       species: data.species as PetSpecies,
       breed: data.breed,
-      birthDate: data.birth_date ? new Date(data.birth_date) : new Date(),
+      birthDate: data.birth_date ? createSafeDate(data.birth_date) : new Date(),
       weight: data.weight || 0,
       status: data.status as PetStatus,
       ownerId: data.owner_id,
       photoUrl: data.photo_url || undefined,
-      createdAt: new Date(data.created_at),
-      updatedAt: new Date(data.updated_at)
+      createdAt: createSafeDate(data.created_at),
+      updatedAt: createSafeDate(data.updated_at)
     };
   }
 } 

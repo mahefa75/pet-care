@@ -11,7 +11,7 @@ import {
   Legend
 } from 'chart.js';
 import { WeightMeasurement } from '../../types/pet';
-import { format, addDays } from 'date-fns';
+import { format, addDays, isValid } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
 ChartJS.register(
@@ -23,6 +23,21 @@ ChartJS.register(
   Tooltip,
   Legend
 );
+
+/**
+ * Fonction utilitaire pour créer une date sécurisée
+ * @param dateInput Date à convertir (Date ou string)
+ * @returns Une date valide ou la date actuelle si invalide
+ */
+const createSafeDate = (dateInput: Date | string): Date => {
+  try {
+    const date = dateInput instanceof Date ? dateInput : new Date(dateInput);
+    return isValid(date) ? date : new Date();
+  } catch (error) {
+    console.warn(`Erreur lors de la conversion de la date: ${dateInput}`, error);
+    return new Date();
+  }
+};
 
 interface WeightChartProps {
   weightHistory: WeightMeasurement[];
@@ -66,9 +81,11 @@ export const WeightChart: React.FC<WeightChartProps> = ({ weightHistory }) => {
     };
   }, []);
 
-  const sortedHistory = [...weightHistory].sort((a, b) => 
-    new Date(a.date).getTime() - new Date(b.date).getTime()
-  );
+  const sortedHistory = [...weightHistory].sort((a, b) => {
+    const dateA = createSafeDate(a.date);
+    const dateB = createSafeDate(b.date);
+    return dateA.getTime() - dateB.getTime();
+  });
 
   // Préparer les données pour la régression linéaire
   const regressionData = sortedHistory.map((measurement, index) => ({
@@ -82,7 +99,7 @@ export const WeightChart: React.FC<WeightChartProps> = ({ weightHistory }) => {
   // Générer les points de projection pour les 14 prochains jours
   const projectionPoints: { date: Date; weight: number }[] = [];
   if (regression && sortedHistory.length > 0) {
-    const lastDate = new Date(sortedHistory[sortedHistory.length - 1].date);
+    const lastDate = createSafeDate(sortedHistory[sortedHistory.length - 1].date);
     for (let i = 1; i <= 14; i++) {
       const projectedDate = addDays(lastDate, i);
       const projectedWeight = regression.slope * (regressionData.length + i - 1) + regression.intercept;
@@ -95,7 +112,7 @@ export const WeightChart: React.FC<WeightChartProps> = ({ weightHistory }) => {
 
   // Combiner les dates historiques et projetées pour les labels
   const allDates = [
-    ...sortedHistory.map(m => new Date(m.date)),
+    ...sortedHistory.map(m => createSafeDate(m.date)),
     ...projectionPoints.map(p => p.date)
   ];
 
