@@ -239,9 +239,27 @@ export const SupabaseMigration: React.FC = () => {
             onClick={migrateData} 
             disabled={isLoading || connectionStatus !== 'connected'}
             startIcon={<ArrowForward />}
-            sx={{ mb: 2 }}
+            sx={{ mb: 2, mr: 2 }}
           >
             Migrer les données vers Supabase
+          </Button>
+
+          <Button 
+            variant="outlined" 
+            color="warning" 
+            onClick={() => {
+              // Forcer le mode Supabase uniquement
+              ServiceFactory.forceSupabaseOnly();
+              setStorageMode(StorageMode.SUPABASE_ONLY);
+              setUseSupabase(true);
+              setMessage('Mode forcé à Supabase uniquement. Les données seront lues et écrites uniquement dans Supabase.');
+              // Forcer un rechargement de la page pour appliquer les changements
+              setTimeout(() => window.location.reload(), 1500);
+            }} 
+            disabled={isLoading || connectionStatus !== 'connected'}
+            sx={{ mb: 2 }}
+          >
+            Forcer mode Supabase uniquement
           </Button>
         </Box>
 

@@ -9,6 +9,9 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 // Vérifier que les clés sont définies
 if (!supabaseUrl || !supabaseAnonKey) {
   console.error('Supabase URL et Anon Key doivent être définis dans les variables d\'environnement');
+} else {
+  console.log('Supabase URL:', supabaseUrl);
+  console.log('Supabase Anon Key (premiers caractères):', supabaseAnonKey.substring(0, 10) + '...');
 }
 
 // Créer le client Supabase
@@ -17,15 +20,18 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);
 // Fonction utilitaire pour vérifier la connexion à Supabase
 export async function checkSupabaseConnection(): Promise<boolean> {
   try {
+    console.log('Tentative de connexion à Supabase...');
     const { data, error } = await supabase.from('pets').select('count').limit(1);
+    
     if (error) {
       console.error('Erreur de connexion à Supabase:', error);
       return false;
     }
-    console.log('Connexion à Supabase établie avec succès');
+    
+    console.log('Connexion à Supabase établie avec succès. Données reçues:', data);
     return true;
   } catch (error) {
-    console.error('Erreur lors de la vérification de la connexion à Supabase:', error);
+    console.error('Exception lors de la vérification de la connexion à Supabase:', error);
     return false;
   }
 } 

@@ -6,6 +6,7 @@ export class SupabasePetService {
    * Récupère la liste des animaux de compagnie avec filtrage et pagination
    */
   async getPets(filters: PetFilters): Promise<Pet[]> {
+    console.log('SupabasePetService: Récupération de tous les animaux depuis Supabase');
     let query = supabase
       .from('pets')
       .select('*')
@@ -26,10 +27,11 @@ export class SupabasePetService {
     const { data, error } = await query.range(from, to);
 
     if (error) {
-      console.error('Erreur lors de la récupération des animaux:', error);
+      console.error('SupabasePetService: Erreur lors de la récupération des animaux:', error);
       throw new Error(`Erreur lors de la récupération des animaux: ${error.message}`);
     }
 
+    console.log('SupabasePetService: Animaux récupérés avec succès:', data);
     // Convertir les données Supabase en objets Pet
     return data.map(item => this.mapToPet(item));
   }

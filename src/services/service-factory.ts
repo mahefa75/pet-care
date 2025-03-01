@@ -11,6 +11,8 @@ import { VeterinarianService } from './veterinarian.service';
 import { AppointmentService } from './appointment.service';
 import { SupabaseFoodService } from './supabase/food.service';
 import { SupabaseGroomingService } from './supabase/grooming.service';
+import { SupabaseVeterinarianService } from './supabase/veterinarian.service';
+import { SupabaseAppointmentService } from './supabase/appointment.service';
 
 // Importer les services Supabase (à créer pour chaque service)
 // import { SupabaseTreatmentService } from './supabase/treatment.service';
@@ -116,26 +118,33 @@ export class ServiceFactory {
   // Initialiser le type de stockage depuis localStorage
   static initialize(): void {
     ServiceFactory.storageManager.initFromLocalStorage();
+    console.log('ServiceFactory initialisé avec le type de stockage:', ServiceFactory.getStorageType());
+    console.log('ServiceFactory initialisé avec le mode de stockage:', ServiceFactory.getStorageMode());
   }
 
   // Changer le type de stockage
   static setStorageType(type: StorageType): void {
+    console.log('ServiceFactory: Changement du type de stockage vers', type);
     ServiceFactory.storageManager.setStorageType(type);
   }
 
   // Obtenir le type de stockage actuel
   static getStorageType(): StorageType {
-    return ServiceFactory.storageManager.getStorageType();
+    const type = ServiceFactory.storageManager.getStorageType();
+    return type;
   }
 
   // Changer le mode de stockage
   static setStorageMode(mode: StorageMode): void {
+    console.log('ServiceFactory: Changement du mode de stockage vers', mode);
     ServiceFactory.storageManager.setStorageMode(mode);
+    console.log('ServiceFactory: Nouveau type de stockage après changement de mode:', ServiceFactory.getStorageType());
   }
 
   // Obtenir le mode de stockage actuel
   static getStorageMode(): StorageMode {
-    return ServiceFactory.storageManager.getStorageMode();
+    const mode = ServiceFactory.storageManager.getStorageMode();
+    return mode;
   }
 
   // Vérifier si la synchronisation locale est activée
@@ -146,6 +155,7 @@ export class ServiceFactory {
   // Factory methods pour chaque service
   static getPetService() {
     const storageType = ServiceFactory.storageManager.getStorageType();
+    console.log('ServiceFactory: getPetService utilise le type de stockage:', storageType);
     return storageType === StorageType.SUPABASE 
       ? new SupabasePetService() 
       : new PetService();
@@ -204,14 +214,36 @@ export class ServiceFactory {
   static getVeterinarianService() {
     const storageType = ServiceFactory.storageManager.getStorageType();
     return storageType === StorageType.SUPABASE 
-      ? new VeterinarianService() // À remplacer par SupabaseVeterinarianService quand disponible
+      ? new SupabaseVeterinarianService()
       : new VeterinarianService();
   }
 
   static getAppointmentService() {
     const storageType = ServiceFactory.storageManager.getStorageType();
     return storageType === StorageType.SUPABASE 
-      ? new AppointmentService() // À remplacer par SupabaseAppointmentService quand disponible
+      ? new SupabaseAppointmentService()
       : new AppointmentService();
+  }
+
+  // Réinitialiser complètement le stockage et forcer l'utilisation de Supabase
+  static forceSupabaseOnly(): void {
+    console.log('ServiceFactory: Forçage du mode Supabase uniquement');
+    
+    // Supprimer toutes les entrées du localStorage liées au stockage
+    localStorage.removeItem('storageType');
+    localStorage.removeItem('storageMode');
+    localStorage.removeItem('syncWithLocalDb');
+    
+    // Définir explicitement les valeurs dans localStorage
+    localStorage.setItem('storageType', StorageType.SUPABASE);
+    localStorage.setItem('storageMode', StorageMode.SUPABASE_ONLY);
+    localStorage.setItem('syncWithLocalDb', 'false');
+    
+    // Mettre à jour le StorageManager
+    ServiceFactory.storageManager.setStorageMode(StorageMode.SUPABASE_ONLY);
+    
+    console.log('ServiceFactory: Mode forcé à Supabase uniquement');
+    console.log('Type de stockage actuel:', ServiceFactory.getStorageType());
+    console.log('Mode de stockage actuel:', ServiceFactory.getStorageMode());
   }
 } 
