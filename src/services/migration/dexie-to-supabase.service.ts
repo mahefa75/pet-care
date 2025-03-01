@@ -8,7 +8,7 @@ export class DexieToSupabaseMigrationService {
   async migrateAllData(): Promise<{ success: boolean; message: string }> {
     try {
       // Vérifier la connexion à Supabase
-      const { data, error } = await supabase.from('pets').select('count');
+      const { error } = await supabase.from('pets').select('count');
       if (error) {
         return { 
           success: false, 
