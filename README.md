@@ -15,6 +15,7 @@ PetCare est une application web développée en React avec TypeScript, conçue p
 9. [Tests](#tests)
 10. [Déploiement](#déploiement)
 11. [UX/UI Design](#ux-ui-design)
+12. [Intégration Supabase](#intégration-supabase)
 
 ## 🏗 Architecture Technique
 
@@ -27,8 +28,8 @@ PetCare est une application web développée en React avec TypeScript, conçue p
 - Firebase pour certaines fonctionnalités
 
 ### Backend
-- PostgreSQL
-- API RESTful
+- PostgreSQL via Supabase
+- Dexie.js pour la base de données locale (IndexedDB)
 
 ### Optimisation des Performances
 - Splitting des chunks optimisé via Vite/Rollup
@@ -484,3 +485,14 @@ Pour toute question ou problème :
 - Revue de code systématique
 - Tests automatisés
 - Monitoring des performances 
+
+## 🔄 Intégration Supabase
+
+L'application PetCare peut désormais stocker toutes ses données sur Supabase, une plateforme backend-as-a-service basée sur PostgreSQL. Cette intégration permet:
+
+- La synchronisation des données entre différents appareils
+- Une sauvegarde en ligne sécurisée
+- Des performances améliorées pour les requêtes complexes
+- Une évolutivité accrue pour gérer de grandes quantités de données
+
+Pour configurer Supabase avec PetCare, consultez le guide détaillé dans [SUPABASE_SETUP.md](./SUPABASE_SETUP.md). 
