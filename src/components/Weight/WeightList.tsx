@@ -1,18 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { WeightMeasurement } from '../../types/pet';
-import { WeightService } from '../../services/weight.service';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { Food } from '../../types/food';
-import { foodService } from '../../services/food.service';
+import { ServiceFactory } from '../../services/service-factory';
 
 interface WeightListProps {
   weights: WeightMeasurement[];
   onWeightUpdated: () => void;
 }
-
-const weightService = new WeightService();
 
 export const WeightList: React.FC<WeightListProps> = ({ weights, onWeightUpdated }) => {
   const [editingWeight, setEditingWeight] = useState<WeightMeasurement | null>(null);
@@ -23,6 +20,7 @@ export const WeightList: React.FC<WeightListProps> = ({ weights, onWeightUpdated
   useEffect(() => {
     const loadFoods = async () => {
       try {
+        const foodService = ServiceFactory.getFoodService();
         const foods = await foodService.getAllFoods();
         const foodsRecord = foods.reduce((acc, food) => {
           acc[food.id] = food;
@@ -51,6 +49,7 @@ export const WeightList: React.FC<WeightListProps> = ({ weights, onWeightUpdated
         return;
       }
 
+      const weightService = ServiceFactory.getWeightService();
       await weightService.updateWeight({
         ...editingWeight,
         weight: Math.round(weightValue * 1000) / 1000
@@ -70,6 +69,7 @@ export const WeightList: React.FC<WeightListProps> = ({ weights, onWeightUpdated
     if (!confirm('Êtes-vous sûr de vouloir supprimer cette mesure ?')) return;
 
     try {
+      const weightService = ServiceFactory.getWeightService();
       await weightService.deleteWeight(weightId);
       onWeightUpdated();
     } catch (err) {

@@ -1,7 +1,7 @@
 import { Pet } from '../types/pet';
-import { WeightService } from './weight.service';
 import { Food } from '../types/food';
 import { db } from '../lib/db';
+import { ServiceFactory } from './service-factory';
 
 interface FoodRecommendation {
   minPortion: number;
@@ -94,9 +94,10 @@ const FOOD_RECOMMENDATIONS = {
   },
 };
 
-const weightService = new WeightService();
-
 export const getFoodRecommendation = async (pet: Pet): Promise<FoodRecommendation | null> => {
+  // Récupérer le service de poids via ServiceFactory
+  const weightService = ServiceFactory.getWeightService();
+  
   // Récupérer le dernier poids enregistré ou utiliser le poids du profil
   const latestWeight = await weightService.getLatestWeight(pet.id);
   const currentWeight = latestWeight?.weight || pet.weight;

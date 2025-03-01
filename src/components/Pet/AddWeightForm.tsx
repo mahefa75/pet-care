@@ -1,12 +1,10 @@
 import React, { useState } from 'react';
-import { WeightService } from '../../services/weight.service';
+import { ServiceFactory } from '../../services/service-factory';
 
 interface AddWeightFormProps {
   petId: number;
   onWeightAdded: () => void;
 }
-
-const weightService = new WeightService();
 
 export const AddWeightForm: React.FC<AddWeightFormProps> = ({ petId, onWeightAdded }) => {
   const [weight, setWeight] = useState('');
@@ -35,6 +33,8 @@ export const AddWeightForm: React.FC<AddWeightFormProps> = ({ petId, onWeightAdd
       // Arrondir à 3 décimales pour éviter les problèmes de précision
       const roundedWeight = Math.round(weightValue * 1000) / 1000;
       
+      // Utiliser le service approprié via ServiceFactory
+      const weightService = ServiceFactory.getWeightService();
       await weightService.addWeightMeasurement({
         petId,
         weight: roundedWeight,

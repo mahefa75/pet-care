@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { PetService } from '../services/pet.service';
-import { WeightService } from '../services/weight.service';
+import { ServiceFactory } from '../services/service-factory';
 import { PetMedicalDetails } from '../components/Pet/PetMedicalDetails';
 import { WeightChart } from '../components/Pet/WeightChart';
 import { AddWeightForm } from '../components/Pet/AddWeightForm';
@@ -9,9 +8,6 @@ import { WeightList } from '../components/Weight/WeightList';
 import { Pet, WeightMeasurement } from '../types/pet';
 import { isValid, format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-
-const petService = new PetService();
-const weightService = new WeightService();
 
 /**
  * Fonction utilitaire pour créer une date sécurisée
@@ -48,6 +44,7 @@ export const PetDetailsPage: React.FC = () => {
   const loadPet = async (petId: number) => {
     try {
       setLoading(true);
+      const petService = ServiceFactory.getPetService();
       const data = await petService.getPetById(petId);
       setPet(data);
       setError(null);
@@ -61,6 +58,7 @@ export const PetDetailsPage: React.FC = () => {
 
   const loadWeightHistory = async (petId: number) => {
     try {
+      const weightService = ServiceFactory.getWeightService();
       const history = await weightService.getWeightHistory(petId);
       setWeightHistory(history);
     } catch (error) {

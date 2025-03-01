@@ -9,6 +9,8 @@ import { groomingService } from './grooming.service';
 // import { HealthEventService } from './health-event.service';
 import { VeterinarianService } from './veterinarian.service';
 import { AppointmentService } from './appointment.service';
+import { SupabaseFoodService } from './supabase/food.service';
+import { SupabaseGroomingService } from './supabase/grooming.service';
 
 // Importer les services Supabase (à créer pour chaque service)
 // import { SupabaseTreatmentService } from './supabase/treatment.service';
@@ -167,13 +169,27 @@ export class ServiceFactory {
   }
 
   static getFoodService() {
-    // Retourner directement l'instance singleton
-    return foodService;
+    const storageType = ServiceFactory.storageManager.getStorageType();
+    // Vérifier si nous devons utiliser Supabase ou Dexie
+    if (storageType === StorageType.SUPABASE) {
+      // Créer une instance du service Supabase pour la nourriture
+      return new SupabaseFoodService();
+    } else {
+      // Retourner l'instance singleton pour Dexie
+      return foodService;
+    }
   }
 
   static getGroomingService() {
-    // Retourner directement l'instance singleton
-    return groomingService;
+    const storageType = ServiceFactory.storageManager.getStorageType();
+    // Vérifier si nous devons utiliser Supabase ou Dexie
+    if (storageType === StorageType.SUPABASE) {
+      // Créer une instance du service Supabase pour le toilettage
+      return new SupabaseGroomingService();
+    } else {
+      // Retourner l'instance singleton pour Dexie
+      return groomingService;
+    }
   }
 
   /* 
