@@ -155,7 +155,7 @@ export const GroupedFoodRecommendation: React.FC<GroupedFoodRecommendationProps>
         </Typography>
       </Box>
       
-      <div className="grid grid-cols-2 gap-8 relative">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8 relative">
         {/* Colonne des recommandations */}
         <div>
           <Box display="flex" alignItems="center" mb={2}>
@@ -186,8 +186,11 @@ export const GroupedFoodRecommendation: React.FC<GroupedFoodRecommendationProps>
           </div>
         </div>
 
-        {/* Séparateur vertical */}
-        <Divider orientation="vertical" flexItem sx={{ position: 'absolute', right: '50%', height: '100%' }} />
+        {/* Séparateur vertical - visible uniquement sur les écrans moyens et grands */}
+        <Divider orientation="vertical" flexItem sx={{ position: 'absolute', right: '50%', height: '100%', display: { xs: 'none', md: 'block' } }} />
+        
+        {/* Séparateur horizontal - visible uniquement sur les petits écrans */}
+        <Divider sx={{ my: 2, display: { xs: 'block', md: 'none' } }} />
 
         {/* Colonne des changements d'alimentation */}
         {weightComparisons.length > 0 && (

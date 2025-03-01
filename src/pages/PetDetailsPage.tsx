@@ -50,48 +50,48 @@ export const PetDetailsPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-32">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      <div className="flex justify-center items-center h-24 sm:h-32">
+        <div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-blue-600"></div>
       </div>
     );
   }
 
   if (error || !pet) {
     return (
-      <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative">
+      <div className="bg-red-50 border border-red-200 text-red-700 px-3 sm:px-4 py-2 sm:py-3 rounded relative">
         {error || 'Animal non trouvé'}
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4 md:py-8">
       {error && (
-        <div className="mb-4 p-4 bg-red-100 text-red-700 rounded-md">
+        <div className="mb-3 sm:mb-4 p-2 sm:p-3 md:p-4 bg-red-100 text-red-700 rounded-md">
           {error}
         </div>
       )}
 
       {pet && (
-        <div className="space-y-8">
-          <div className="flex justify-between items-center">
-            <h1 className="text-3xl font-bold">{pet.name}</h1>
-            <div className="flex space-x-4">
+        <div className="space-y-3 sm:space-y-4 md:space-y-8">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold">{pet.name}</h1>
+            <div>
               <Link
                 to={`/pet/${pet.id}/health`}
-                className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                className="inline-block w-full sm:w-auto rounded-md bg-blue-600 px-3 sm:px-4 py-1.5 sm:py-2 text-sm font-medium text-white hover:bg-blue-700"
               >
                 Suivi santé et toilettage
               </Link>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-8">
             {/* Informations de base */}
             <div className="lg:col-span-1">
-              <div className="bg-white rounded-lg shadow-sm p-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">Informations</h2>
-                <dl className="space-y-4">
+              <div className="bg-white rounded-lg shadow-sm p-3 sm:p-4 md:p-6">
+                <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3 md:mb-4">Informations</h2>
+                <dl className="space-y-2 sm:space-y-3 md:space-y-4">
                   <div>
                     <dt className="text-sm font-medium text-gray-500">Espèce</dt>
                     <dd className="mt-1 text-sm text-gray-900">{pet.species}</dd>
@@ -118,12 +118,12 @@ export const PetDetailsPage: React.FC = () => {
               </div>
 
               {/* Graphique d'évolution du poids */}
-              <div className="mt-8 space-y-6">
-                <div className="bg-white rounded-lg shadow-sm p-6">
-                  <h2 className="text-xl font-semibold text-gray-900 mb-4">Suivi du poids</h2>
+              <div className="mt-3 sm:mt-4 md:mt-8 space-y-3 sm:space-y-4 md:space-y-6">
+                <div className="bg-white rounded-lg shadow-sm p-3 sm:p-4 md:p-6">
+                  <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3 md:mb-4">Suivi du poids</h2>
                   <WeightChart weightHistory={weightHistory} />
-                  <div className="mt-6">
-                    <h3 className="text-lg font-medium text-gray-900 mb-4">Ajouter une mesure</h3>
+                  <div className="mt-3 sm:mt-4 md:mt-6">
+                    <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2 sm:mb-3 md:mb-4">Ajouter une mesure</h3>
                     <AddWeightForm 
                       petId={parseInt(id!)} 
                       onWeightAdded={() => loadWeightHistory(parseInt(id!))} 

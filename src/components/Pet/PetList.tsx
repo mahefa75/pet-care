@@ -74,9 +74,9 @@ export const PetList: React.FC<PetListProps> = ({ onEdit, onDelete }) => {
 
   return (
     <div>
-      <div className="mb-6 flex items-center gap-4 bg-white p-2 rounded-lg shadow-sm">
-        <div className="flex-1 flex items-center gap-4">
-          <div className="w-48">
+      <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center gap-4 bg-white p-2 rounded-lg shadow-sm">
+        <div className="flex-1 flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full">
+          <div className="w-full sm:w-48">
             <select
               className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
               onChange={(e) => handleSpeciesFilter(e.target.value as PetSpecies | '')}
@@ -90,7 +90,7 @@ export const PetList: React.FC<PetListProps> = ({ onEdit, onDelete }) => {
               ))}
             </select>
           </div>
-          <div className="w-48">
+          <div className="w-full sm:w-48 mt-2 sm:mt-0">
             <select
               className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
               onChange={(e) => handleStatusFilter(e.target.value as PetStatus | '')}
@@ -105,7 +105,7 @@ export const PetList: React.FC<PetListProps> = ({ onEdit, onDelete }) => {
             </select>
           </div>
         </div>
-        <div className="flex gap-2 bg-gray-50 rounded-lg p-1 border border-gray-200">
+        <div className="flex gap-2 bg-gray-50 rounded-lg p-1 border border-gray-200 mt-2 sm:mt-0 self-end sm:self-auto">
           <button
             onClick={() => setViewMode('grid')}
             className={`p-2 rounded ${viewMode === 'grid' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
@@ -124,7 +124,7 @@ export const PetList: React.FC<PetListProps> = ({ onEdit, onDelete }) => {
       </div>
 
       <div className={viewMode === 'grid' 
-        ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+        ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"
         : "space-y-4"
       }>
         {pets.map((pet) => (
@@ -146,14 +146,14 @@ export const PetList: React.FC<PetListProps> = ({ onEdit, onDelete }) => {
 
       <div className="mt-6 flex justify-center space-x-4">
         <button
-          className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md mr-2 disabled:opacity-50"
+          className="px-3 sm:px-4 py-2 bg-gray-100 text-gray-700 rounded-md mr-2 disabled:opacity-50 text-sm sm:text-base"
           disabled={filters.page === 1}
           onClick={() => setFilters(prev => ({ ...prev, page: prev.page - 1 }))}
         >
           Précédent
         </button>
         <button
-          className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md disabled:opacity-50"
+          className="px-3 sm:px-4 py-2 bg-gray-100 text-gray-700 rounded-md disabled:opacity-50 text-sm sm:text-base"
           disabled={pets.length < filters.limit}
           onClick={() => setFilters(prev => ({ ...prev, page: prev.page + 1 }))}
         >

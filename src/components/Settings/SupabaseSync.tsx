@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { EnhancedSyncService } from '../../services/enhancedSync.service';
+import { SupabaseSyncService } from '../../services/supabaseSync.service';
 import { SyncStatus } from './SyncStatus';
 
-export const FirebaseSync: React.FC = () => {
+export const SupabaseSync: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
-  const syncService = new EnhancedSyncService();
+  const syncService = new SupabaseSyncService();
 
   const handleSync = async () => {
     setIsLoading(true);
@@ -18,10 +18,10 @@ export const FirebaseSync: React.FC = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-semibold mb-4">Synchronisation Firebase</h2>
+        <h2 className="text-xl font-semibold mb-4">Synchronisation Supabase</h2>
         <p className="text-gray-600 mb-6">
-          Synchronisez vos données locales avec Firebase pour les sauvegarder en ligne.
-          La synchronisation est bidirectionnelle et utilise les horodatages pour résoudre les conflits.
+          Synchronisez vos données locales avec Supabase pour les sauvegarder en ligne.
+          La synchronisation utilise les horodatages pour résoudre les conflits.
         </p>
         <button
           onClick={handleSync}

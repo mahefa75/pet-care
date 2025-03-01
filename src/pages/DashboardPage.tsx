@@ -22,7 +22,6 @@ import { CalendarIcon, ChartBarIcon, PresentationChartLineIcon, PlusIcon } from 
 import { ArrowTrendingUpIcon } from '@heroicons/react/24/solid';
 import { GroupedFoodRecommendation } from '../components/Pet/FoodRecommendation';
 import { BulkWeightEntry } from '../components/Weight/BulkWeightEntry';
-import { Button } from '../components/UI/Button';
 import { addDays } from 'date-fns';
 import { AddReminderOffcanvas } from '../components/Treatment/AddReminderOffcanvas';
 
@@ -296,56 +295,63 @@ export const DashboardPage: React.FC = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative">
+      <div className="absolute top-4 right-4">
+        <div className="h-2 w-2 rounded-full bg-green-500" title="Connecté"></div>
+      </div>
+      
+      <h1 className="text-2xl font-bold text-gray-900 mb-8">Tableau de bord</h1>
+
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 md:gap-8">
         {/* Graphique des poids */}
         <div className="lg:col-span-3">
-          <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
-            <div className="flex justify-between items-center mb-8">
-              <div className="flex items-center gap-4">
-                <h2 className="text-xl font-semibold text-gray-900">Suivi des poids</h2>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setChartType('line')}
-                    className={`p-2 rounded-md hover:bg-gray-100 transition-colors ${
-                      chartType === 'line' ? 'bg-gray-100 text-blue-600' : 'text-gray-600'
-                    }`}
-                    title="Graphique en ligne"
-                  >
-                    <PresentationChartLineIcon className="h-5 w-5" />
-                  </button>
-                  <button
-                    onClick={() => setChartType('bar')}
-                    className={`p-2 rounded-md hover:bg-gray-100 transition-colors ${
-                      chartType === 'bar' ? 'bg-gray-100 text-blue-600' : 'text-gray-600'
-                    }`}
-                    title="Graphique en barres"
-                  >
-                    <ChartBarIcon className="h-5 w-5" />
-                  </button>
-                  {chartType === 'line' && (
-                    <button
-                      onClick={() => setShowTrendlines(!showTrendlines)}
-                      className={`flex items-center gap-1 px-3 py-1.5 rounded-md hover:bg-gray-100 transition-colors ${
-                        showTrendlines ? 'bg-gray-100 text-blue-600' : 'text-gray-600'
-                      }`}
-                      title="Afficher/masquer les tendances"
-                    >
-                      <ArrowTrendingUpIcon className="h-5 w-5" />
-                      <span className="text-sm font-medium">Tendances</span>
-                    </button>
-                  )}
-                </div>
-              </div>
-              <Button
+          <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6 mb-4 sm:mb-8">
+            <div className="flex justify-between items-center mb-4 sm:mb-6">
+              <h2 className="text-xl font-semibold text-gray-900">Suivi des poids</h2>
+              <button
                 onClick={() => setIsBulkWeightEntryOpen(true)}
-                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                className="p-1.5 rounded-md bg-gray-100 hover:bg-gray-200 transition-colors text-gray-700 text-sm font-medium"
+                title="Saisie des poids en masse"
               >
                 Saisie des poids en masse
-              </Button>
+              </button>
             </div>
+            
+            <div className="flex items-center gap-2 mb-4 sm:mb-8">
+              <button
+                onClick={() => setChartType('line')}
+                className={`p-2 rounded-md hover:bg-gray-100 transition-colors ${
+                  chartType === 'line' ? 'bg-gray-100 text-blue-600' : 'text-gray-600'
+                }`}
+                title="Graphique en ligne"
+              >
+                <PresentationChartLineIcon className="h-5 w-5" />
+              </button>
+              <button
+                onClick={() => setChartType('bar')}
+                className={`p-2 rounded-md hover:bg-gray-100 transition-colors ${
+                  chartType === 'bar' ? 'bg-gray-100 text-blue-600' : 'text-gray-600'
+                }`}
+                title="Graphique en barres"
+              >
+                <ChartBarIcon className="h-5 w-5" />
+              </button>
+              {chartType === 'line' && (
+                <button
+                  onClick={() => setShowTrendlines(!showTrendlines)}
+                  className={`flex items-center gap-1 px-3 py-1.5 rounded-md hover:bg-gray-100 transition-colors ${
+                    showTrendlines ? 'bg-gray-100 text-blue-600' : 'text-gray-600'
+                  }`}
+                  title="Afficher/masquer les tendances"
+                >
+                  <ArrowTrendingUpIcon className="h-5 w-5" />
+                  <span className="text-sm font-medium hidden sm:inline">Tendances</span>
+                </button>
+              )}
+            </div>
+            
             {weightData.size > 0 ? (
-              <div style={{ height: '400px' }}>
+              <div style={{ height: '300px', minHeight: '300px' }} className="md:h-[400px]">
                 {chartType === 'line' ? (
                   <Line data={getChartData()} options={options} />
                 ) : (
@@ -369,7 +375,7 @@ export const DashboardPage: React.FC = () => {
         </div>
 
         {/* Rappels et traitements à venir */}
-        <div className="lg:col-span-1 bg-white rounded-lg shadow-sm p-6">
+        <div className="lg:col-span-1 bg-white rounded-lg shadow-sm p-4 sm:p-6 mt-4 lg:mt-0">
           <div className="flex items-center gap-2 mb-4">
             <CalendarIcon className="h-5 w-5 text-blue-600" />
             <h2 className="text-xl font-semibold text-gray-900">Rappels</h2>

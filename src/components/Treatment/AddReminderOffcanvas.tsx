@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { TreatmentType, TreatmentStatus } from '../../types/medical';
 import { TreatmentService } from '../../services/treatment.service';
+import { groomingService } from '../../services/grooming.service';
 import { Pet } from '../../types/pet';
 import { Offcanvas } from '../UI/Offcanvas';
 import { format, addDays } from 'date-fns';
@@ -69,12 +70,18 @@ export const AddReminderOffcanvas: React.FC<AddReminderOffcanvasProps> = ({
         };
 
         if (type === 'GROOMING') {
-          // TODO: Implémenter la création de rendez-vous de toilettage avec les types sélectionnés
           const selectedTypes = Object.entries(groomingTypes)
             .filter(([_, isSelected]) => isSelected)
             .map(([type]) => type);
           
-          // TODO: Créer le rendez-vous de toilettage avec selectedTypes
+          await groomingService.addGroomingRecord({
+            petId,
+            date: new Date(),
+            type: selectedTypes.join(','),
+            description,
+            nextAppointment: new Date(date),
+            provider: provider || undefined
+          });
         } else {
           switch (type) {
             case TreatmentType.VACCINATION:
