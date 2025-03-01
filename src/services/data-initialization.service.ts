@@ -51,9 +51,17 @@ export class DataInitializationService {
       if (isConnected) {
         console.log('Connexion à Supabase établie. L\'application utilisera Supabase comme source de données.');
         
-        // Vérifier si des données existent déjà dans la base locale
-        // Si la base locale est vide et que Supabase contient des données, on peut les charger
-        await this.loadInitialDataIfNeeded();
+        // Vérifier si l'utilisateur a choisi de synchroniser avec la base locale
+        const syncWithLocalDb = localStorage.getItem('syncWithLocalDb') !== 'false';
+        
+        if (syncWithLocalDb) {
+          console.log('Mode hybride activé: synchronisation avec la base de données locale.');
+          // Vérifier si des données existent déjà dans la base locale
+          // Si la base locale est vide et que Supabase contient des données, on peut les charger
+          await this.loadInitialDataIfNeeded();
+        } else {
+          console.log('Mode Supabase uniquement: pas de synchronisation avec la base de données locale.');
+        }
       } else {
         console.warn('Impossible de se connecter à Supabase. Retour à la base de données locale.');
         ServiceFactory.setStorageType(StorageType.DEXIE);

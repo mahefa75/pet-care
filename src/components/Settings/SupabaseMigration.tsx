@@ -1,11 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Card, CardContent, Typography, Box, Alert, CircularProgress, List, ListItem, ListItemIcon, ListItemText, Divider, Switch, FormControlLabel } from '@mui/material';
+import { Button, Card, CardContent, Typography, Box, Alert, CircularProgress, List, ListItem, ListItemIcon, ListItemText, Divider, Switch, FormControlLabel, RadioGroup, Radio, FormControl, FormLabel } from '@mui/material';
 import { CheckCircle, Error, Info, ArrowForward } from '@mui/icons-material';
 import { DexieToSupabaseMigrationService } from '../../services/migration/dexie-to-supabase.service';
 import { checkSupabaseConnection } from '../../lib/supabase';
-import { ServiceFactory, StorageType } from '../../services/service-factory';
+import { ServiceFactory, StorageType, StorageMode } from '../../services/service-factory';
 
 const migrationService = new DexieToSupabaseMigrationService();
+
+// Type pour les résultats de migration
+interface MigrationResult {
+  success: boolean;
+  message: string;
+}
 
 export const SupabaseMigration: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -14,25 +20,44 @@ export const SupabaseMigration: React.FC = () => {
   const [message, setMessage] = useState('');
   const [migrationResults, setMigrationResults] = useState<Array<{ table: string; success: boolean; message: string }>>([]);
   const [useSupabase, setUseSupabase] = useState(false);
+  const [storageMode, setStorageMode] = useState<StorageMode>(StorageMode.DEXIE_ONLY);
 
   // Initialiser le type de stockage au chargement du composant
   useEffect(() => {
     ServiceFactory.initialize();
-    setUseSupabase(ServiceFactory.getStorageType() === StorageType.SUPABASE);
+    const currentStorageType = ServiceFactory.getStorageType();
+    setUseSupabase(currentStorageType === StorageType.SUPABASE);
+    
+    // Récupérer le mode de stockage depuis localStorage
+    const currentMode = ServiceFactory.getStorageMode();
+    setStorageMode(currentMode);
   }, []);
 
-  // Gérer le changement de source de données
-  const handleStorageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const useSupabaseStorage = event.target.checked;
-    setUseSupabase(useSupabaseStorage);
+  // Gérer le changement de mode de stockage
+  const handleStorageModeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const newMode = event.target.value as StorageMode;
+    setStorageMode(newMode);
     
-    // Mettre à jour le type de stockage dans la factory
-    ServiceFactory.setStorageType(useSupabaseStorage ? StorageType.SUPABASE : StorageType.DEXIE);
+    // Mettre à jour le mode de stockage dans la factory
+    ServiceFactory.setStorageMode(newMode);
+    
+    // Mettre à jour l'état useSupabase pour la compatibilité avec le reste du code
+    setUseSupabase(newMode !== StorageMode.DEXIE_ONLY);
     
     // Afficher un message à l'utilisateur
-    setMessage(useSupabaseStorage 
-      ? 'Application configurée pour utiliser Supabase. Les données seront lues et écrites dans Supabase.' 
-      : 'Application configurée pour utiliser la base de données locale (Dexie).');
+    let messageText = '';
+    switch (newMode) {
+      case StorageMode.DEXIE_ONLY:
+        messageText = 'Application configurée pour utiliser uniquement la base de données locale (Dexie).';
+        break;
+      case StorageMode.SUPABASE_ONLY:
+        messageText = 'Application configurée pour utiliser uniquement Supabase. Les données seront lues et écrites uniquement dans Supabase.';
+        break;
+      case StorageMode.HYBRID:
+        messageText = 'Application configurée pour utiliser Supabase avec synchronisation locale. Les données seront lues et écrites dans Supabase et synchronisées localement.';
+        break;
+    }
+    setMessage(messageText);
   };
 
   // Vérifier la connexion à Supabase
@@ -69,26 +94,34 @@ export const SupabaseMigration: React.FC = () => {
     try {
       // Migrer les données table par table pour avoir un retour détaillé
       const tables = [
-        { name: 'Animaux', method: migrationService.migratePets.bind(migrationService) },
-        { name: 'Rendez-vous', method: migrationService.migrateAppointments.bind(migrationService) },
-        { name: 'Traitements', method: migrationService.migrateTreatments.bind(migrationService) },
-        { name: 'Mesures de poids', method: migrationService.migrateWeightMeasurements.bind(migrationService) },
-        { name: 'Toilettage', method: migrationService.migrateGrooming.bind(migrationService) },
-        { name: 'Événements de santé', method: migrationService.migrateHealthEvents.bind(migrationService) },
-        { name: 'Aliments', method: migrationService.migrateFoods.bind(migrationService) },
-        { name: 'Vétérinaires', method: migrationService.migrateVeterinarians.bind(migrationService) }
+        { name: 'Animaux', method: async (): Promise<MigrationResult> => migrationService.migratePets() },
+        { name: 'Rendez-vous', method: async (): Promise<MigrationResult> => migrationService.migrateAppointments() },
+        { name: 'Traitements', method: async (): Promise<MigrationResult> => migrationService.migrateTreatments() },
+        { name: 'Mesures de poids', method: async (): Promise<MigrationResult> => migrationService.migrateWeightMeasurements() },
+        { name: 'Toilettage', method: async (): Promise<MigrationResult> => migrationService.migrateGrooming() },
+        { name: 'Événements de santé', method: async (): Promise<MigrationResult> => migrationService.migrateHealthEvents() },
+        { name: 'Aliments', method: async (): Promise<MigrationResult> => migrationService.migrateFoods() },
+        { name: 'Vétérinaires', method: async (): Promise<MigrationResult> => migrationService.migrateVeterinarians() }
       ];
 
       const results = [];
       
       for (const table of tables) {
         setMessage(`Migration de la table ${table.name} en cours...`);
-        const result = await table.method();
-        results.push({
-          table: table.name,
-          success: result.success,
-          message: result.message
-        });
+        try {
+          const result = await table.method();
+          results.push({
+            table: table.name,
+            success: result.success,
+            message: result.message
+          });
+        } catch (error) {
+          results.push({
+            table: table.name,
+            success: false,
+            message: error instanceof Error ? error.message : String(error)
+          });
+        }
         setMigrationResults([...results]);
       }
 
@@ -101,7 +134,9 @@ export const SupabaseMigration: React.FC = () => {
       // Si la migration est réussie, activer automatiquement l'utilisation de Supabase
       if (!hasErrors) {
         setUseSupabase(true);
-        ServiceFactory.setStorageType(StorageType.SUPABASE);
+        // Par défaut, utiliser le mode hybride après migration
+        setStorageMode(StorageMode.HYBRID);
+        ServiceFactory.setStorageMode(StorageMode.HYBRID);
       }
     } catch (error) {
       setMigrationStatus('error');
@@ -125,20 +160,39 @@ export const SupabaseMigration: React.FC = () => {
         </Typography>
 
         <Box sx={{ mb: 3 }}>
-          <FormControlLabel
-            control={
-              <Switch
-                checked={useSupabase}
-                onChange={handleStorageChange}
-                color="primary"
+          <FormControl component="fieldset">
+            <FormLabel component="legend">Mode de stockage des données</FormLabel>
+            <RadioGroup
+              value={storageMode}
+              onChange={handleStorageModeChange}
+            >
+              <FormControlLabel 
+                value={StorageMode.DEXIE_ONLY} 
+                control={<Radio />} 
+                label="Utiliser uniquement la base de données locale (Dexie)" 
               />
-            }
-            label={useSupabase ? "Utiliser Supabase (cloud)" : "Utiliser la base de données locale"}
-          />
+              <FormControlLabel 
+                value={StorageMode.SUPABASE_ONLY} 
+                control={<Radio />} 
+                label="Utiliser uniquement Supabase (cloud)" 
+                disabled={connectionStatus !== 'connected'}
+              />
+              <FormControlLabel 
+                value={StorageMode.HYBRID} 
+                control={<Radio />} 
+                label="Utiliser Supabase avec synchronisation locale (hybride)" 
+                disabled={connectionStatus !== 'connected'}
+              />
+            </RadioGroup>
+          </FormControl>
+          
           <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-            {useSupabase 
-              ? "Les données sont stockées dans Supabase et accessibles depuis n'importe quel appareil." 
-              : "Les données sont stockées localement sur cet appareil uniquement."}
+            {storageMode === StorageMode.DEXIE_ONLY && 
+              "Les données sont stockées localement sur cet appareil uniquement."}
+            {storageMode === StorageMode.SUPABASE_ONLY && 
+              "Les données sont stockées uniquement dans Supabase et accessibles depuis n'importe quel appareil. Aucune donnée n'est stockée localement."}
+            {storageMode === StorageMode.HYBRID && 
+              "Les données sont stockées dans Supabase et synchronisées localement pour un accès hors ligne."}
           </Typography>
         </Box>
 
