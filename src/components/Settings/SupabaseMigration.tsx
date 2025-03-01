@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
-import { Button, Card, CardContent, Typography, Box, Alert, CircularProgress, List, ListItem, ListItemIcon, ListItemText, Divider } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import { Button, Card, CardContent, Typography, Box, Alert, CircularProgress, List, ListItem, ListItemIcon, ListItemText, Divider, Switch, FormControlLabel } from '@mui/material';
 import { CheckCircle, Error, Info, ArrowForward } from '@mui/icons-material';
 import { DexieToSupabaseMigrationService } from '../../services/migration/dexie-to-supabase.service';
 import { checkSupabaseConnection } from '../../lib/supabase';
+import { ServiceFactory, StorageType } from '../../services/service-factory';
 
 const migrationService = new DexieToSupabaseMigrationService();
 
@@ -12,6 +13,27 @@ export const SupabaseMigration: React.FC = () => {
   const [migrationStatus, setMigrationStatus] = useState<'idle' | 'in_progress' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState('');
   const [migrationResults, setMigrationResults] = useState<Array<{ table: string; success: boolean; message: string }>>([]);
+  const [useSupabase, setUseSupabase] = useState(false);
+
+  // Initialiser le type de stockage au chargement du composant
+  useEffect(() => {
+    ServiceFactory.initialize();
+    setUseSupabase(ServiceFactory.getStorageType() === StorageType.SUPABASE);
+  }, []);
+
+  // Gérer le changement de source de données
+  const handleStorageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const useSupabaseStorage = event.target.checked;
+    setUseSupabase(useSupabaseStorage);
+    
+    // Mettre à jour le type de stockage dans la factory
+    ServiceFactory.setStorageType(useSupabaseStorage ? StorageType.SUPABASE : StorageType.DEXIE);
+    
+    // Afficher un message à l'utilisateur
+    setMessage(useSupabaseStorage 
+      ? 'Application configurée pour utiliser Supabase. Les données seront lues et écrites dans Supabase.' 
+      : 'Application configurée pour utiliser la base de données locale (Dexie).');
+  };
 
   // Vérifier la connexion à Supabase
   const checkConnection = async () => {
@@ -75,6 +97,12 @@ export const SupabaseMigration: React.FC = () => {
       setMessage(hasErrors 
         ? 'La migration a rencontré des erreurs. Consultez les détails ci-dessous.' 
         : 'Migration des données vers Supabase terminée avec succès !');
+      
+      // Si la migration est réussie, activer automatiquement l'utilisation de Supabase
+      if (!hasErrors) {
+        setUseSupabase(true);
+        ServiceFactory.setStorageType(StorageType.SUPABASE);
+      }
     } catch (error) {
       setMigrationStatus('error');
       setMessage(`Erreur lors de la migration: ${error instanceof Error ? error.message : String(error)}`);
@@ -95,6 +123,26 @@ export const SupabaseMigration: React.FC = () => {
           une plateforme de base de données cloud. Cela permettra de synchroniser vos données 
           entre différents appareils et d'avoir une sauvegarde en ligne.
         </Typography>
+
+        <Box sx={{ mb: 3 }}>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={useSupabase}
+                onChange={handleStorageChange}
+                color="primary"
+              />
+            }
+            label={useSupabase ? "Utiliser Supabase (cloud)" : "Utiliser la base de données locale"}
+          />
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+            {useSupabase 
+              ? "Les données sont stockées dans Supabase et accessibles depuis n'importe quel appareil." 
+              : "Les données sont stockées localement sur cet appareil uniquement."}
+          </Typography>
+        </Box>
+
+        <Divider sx={{ my: 2 }} />
 
         <Box sx={{ mb: 3 }}>
           <Typography variant="subtitle1" gutterBottom>
