@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
 import { PetsPage } from './pages/PetsPage';
 import { PetDetailsPage } from './pages/PetDetailsPage';
@@ -10,6 +10,10 @@ import MedicalPage from './pages/MedicalPage';
 import { PetHealthPage } from './pages/PetHealthPage';
 import ConnectionStatus from './components/common/ConnectionStatus';
 import { Offcanvas } from './components/UI/Offcanvas';
+import { DataInitializationService } from './services/data-initialization.service';
+
+// Initialiser le service de données
+const dataInitService = new DataInitializationService();
 
 // Composant de navigation mobile en bas de l'écran
 const MobileNavBar: React.FC = () => {
@@ -184,12 +188,65 @@ const Navigation: React.FC = () => {
 };
 
 const App: React.FC = () => {
+  const [isInitialized, setIsInitialized] = useState(false);
+  const [initError, setInitError] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Initialiser le service de données au démarrage de l'application
+    const initializeData = async () => {
+      try {
+        await dataInitService.initialize();
+        setIsInitialized(true);
+      } catch (error) {
+        console.error('Erreur lors de l\'initialisation des données:', error);
+        setInitError(error instanceof Error ? error.message : 'Erreur inconnue');
+        setIsInitialized(true); // On considère l'app comme initialisée même en cas d'erreur
+      }
+    };
+
+    initializeData();
+  }, []);
+
+  // Afficher un écran de chargement pendant l'initialisation
+  if (!isInitialized) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Chargement de l'application...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Afficher un message d'erreur si l'initialisation a échoué
+  if (initError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center max-w-md p-6 bg-white rounded-lg shadow-md">
+          <div className="text-red-500 text-5xl mb-4">⚠️</div>
+          <h1 className="text-xl font-bold text-red-600 mb-2">Erreur d'initialisation</h1>
+          <p className="text-gray-600 mb-4">{initError}</p>
+          <p className="text-gray-500 text-sm">
+            Veuillez vérifier votre connexion internet et rafraîchir la page.
+          </p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+          >
+            Réessayer
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <Router>
       <div className="min-h-screen bg-gray-50">
         <Navigation />
         <ConnectionStatus />
-        <main className="pt-16 pb-16 md:pb-0"> {/* Ajout de padding-bottom pour la barre de navigation mobile */}
+        <main className="pt-16 pb-16 md:pb-0">
           <Routes>
             <Route path="/" element={<DashboardPage />} />
             <Route path="/pets" element={<PetsPage />} />
@@ -199,7 +256,7 @@ const App: React.FC = () => {
             <Route path="/pet/:id/health" element={<PetHealthPage />} />
           </Routes>
         </main>
-        <MobileNavBar /> {/* Ajout de la barre de navigation mobile */}
+        <MobileNavBar />
       </div>
     </Router>
   );
