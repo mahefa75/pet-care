@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Line } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -52,6 +52,20 @@ const calculateLinearRegression = (data: { x: number, y: number }[]) => {
 };
 
 export const WeightChart: React.FC<WeightChartProps> = ({ weightHistory }) => {
+  const [chartWidth, setChartWidth] = useState<number>(window.innerWidth);
+  
+  // Effet pour gérer le redimensionnement de la fenêtre
+  useEffect(() => {
+    const handleResize = () => {
+      setChartWidth(window.innerWidth);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
   const sortedHistory = [...weightHistory].sort((a, b) => 
     new Date(a.date).getTime() - new Date(b.date).getTime()
   );
@@ -85,9 +99,14 @@ export const WeightChart: React.FC<WeightChartProps> = ({ weightHistory }) => {
     ...projectionPoints.map(p => p.date)
   ];
 
+  // Format de date adapté selon la taille de l'écran
+  const getDateFormat = () => {
+    return chartWidth < 768 ? 'dd/MM/yy' : 'dd MMM yyyy';
+  };
+
   const data = {
     labels: allDates.map(date => 
-      format(date, 'dd MMM yyyy', { locale: fr })
+      format(date, getDateFormat(), { locale: fr })
     ),
     datasets: [
       {
@@ -114,14 +133,25 @@ export const WeightChart: React.FC<WeightChartProps> = ({ weightHistory }) => {
 
   const options = {
     responsive: true,
+    maintainAspectRatio: true,
     plugins: {
       legend: {
         display: true,
-        position: 'top' as const
+        position: 'top' as const,
+        labels: {
+          boxWidth: chartWidth < 768 ? 10 : 40,
+          padding: chartWidth < 768 ? 8 : 10,
+          font: {
+            size: chartWidth < 768 ? 10 : 12
+          }
+        }
       },
       title: {
         display: true,
-        text: 'Évolution du poids'
+        text: 'Évolution du poids',
+        font: {
+          size: chartWidth < 768 ? 14 : 16
+        }
       },
       tooltip: {
         callbacks: {
@@ -138,7 +168,24 @@ export const WeightChart: React.FC<WeightChartProps> = ({ weightHistory }) => {
         beginAtZero: false,
         title: {
           display: true,
-          text: 'Poids (kg)'
+          text: 'Poids (kg)',
+          font: {
+            size: chartWidth < 768 ? 10 : 12
+          }
+        },
+        ticks: {
+          font: {
+            size: chartWidth < 768 ? 9 : 11
+          }
+        }
+      },
+      x: {
+        ticks: {
+          maxRotation: chartWidth < 768 ? 45 : 0,
+          minRotation: chartWidth < 768 ? 45 : 0,
+          font: {
+            size: chartWidth < 768 ? 8 : 10
+          }
         }
       }
     }
@@ -153,7 +200,7 @@ export const WeightChart: React.FC<WeightChartProps> = ({ weightHistory }) => {
   }
 
   return (
-    <div className="bg-white p-4 rounded-lg shadow">
+    <div className="bg-white p-2 sm:p-4 rounded-lg shadow">
       <Line data={data} options={options} />
     </div>
   );

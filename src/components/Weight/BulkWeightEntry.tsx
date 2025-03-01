@@ -52,7 +52,7 @@ const NoteModal: React.FC<NoteModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-      <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+      <div className="relative top-20 mx-auto p-4 sm:p-5 border w-full max-w-xs sm:max-w-sm md:max-w-md shadow-lg rounded-md bg-white">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-medium">Ajouter une note</h3>
           <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
@@ -102,13 +102,13 @@ const NoteModal: React.FC<NoteModalProps> = ({
           <div className="flex justify-end space-x-2">
             <button
               onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+              className="px-3 sm:px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
             >
               Annuler
             </button>
             <button
               onClick={() => onSave(notes, selectedFoods)}
-              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+              className="px-3 sm:px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
             >
               Enregistrer
             </button>
@@ -223,7 +223,7 @@ export const BulkWeightEntry: React.FC<BulkWeightEntryProps> = ({
   return (
     <>
       <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-        <div className="fixed right-0 top-0 h-full md:w-3/4 lg:w-2/3 bg-white shadow-lg transition-transform duration-300 ease-in-out transform translate-x-0">
+        <div className="fixed right-0 top-0 h-full w-full sm:w-4/5 md:w-3/4 lg:w-2/3 bg-white shadow-lg transition-transform duration-300 ease-in-out transform translate-x-0">
           <div className="flex flex-col h-full">
             {/* Header */}
             <div className="p-4 border-b">
@@ -241,46 +241,46 @@ export const BulkWeightEntry: React.FC<BulkWeightEntryProps> = ({
             </div>
 
             {/* Content */}
-            <div className="flex-1 overflow-y-auto p-4">
+            <div className="flex-1 overflow-y-auto p-2 sm:p-4">
               <div className="overflow-x-auto">
                 <table className="w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50 sticky top-0">
                     <tr>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                      <th className="px-2 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                         Date
                       </th>
                       {pets.map(pet => (
-                        <th key={pet.id} className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                        <th key={pet.id} className="px-2 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                           {pet.name}
                         </th>
                       ))}
-                      <th className="px-4 py-3 w-12"></th>
+                      <th className="px-2 sm:px-4 py-2 sm:py-3 w-12"></th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {entries.map((entry, index) => (
                       <tr key={index}>
-                        <td className="px-3 py-2 whitespace-nowrap">
+                        <td className="px-2 sm:px-3 py-2 whitespace-nowrap">
                           <input
                             type="date"
                             value={entry.date}
                             onChange={(e) => updateDate(index, e.target.value)}
-                            className="block w-40 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                            className="block w-32 sm:w-40 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                           />
                         </td>
                         {pets.map(pet => (
-                          <td key={pet.id} className="px-3 py-2 whitespace-nowrap">
+                          <td key={pet.id} className="px-2 sm:px-3 py-2 whitespace-nowrap">
                             <input
                               type="text"
                               value={entry.weights[pet.id] || ''}
                               onChange={(e) => updateWeight(index, pet.id, e.target.value)}
                               placeholder="Kg"
-                              className="block w-24 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                              className="block w-16 sm:w-24 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                             />
                           </td>
                         ))}
-                        <td className="px-3 py-2 whitespace-nowrap">
-                          <div className="flex gap-2">
+                        <td className="px-2 sm:px-3 py-2 whitespace-nowrap">
+                          <div className="flex gap-1 sm:gap-2">
                             <button
                               onClick={() => handleNoteClick(index)}
                               className="text-blue-600 hover:text-blue-800"

@@ -1,16 +1,21 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
 import { PetsPage } from './pages/PetsPage';
 import { PetDetailsPage } from './pages/PetDetailsPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { SettingsPage } from './pages/SettingsPage';
-import { Cog6ToothIcon } from '@heroicons/react/24/outline';
+import { Cog6ToothIcon, Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
 import MedicalPage from './pages/MedicalPage';
 import { PetHealthPage } from './pages/PetHealthPage';
 import ConnectionStatus from './components/common/ConnectionStatus';
 
 const Navigation: React.FC = () => {
   const location = useLocation();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
+  };
   
   return (
     <nav className="bg-white shadow-lg">
@@ -20,7 +25,7 @@ const Navigation: React.FC = () => {
             <div className="flex-shrink-0 flex items-center">
               <h1 className="text-xl font-bold text-blue-600">PetCare</h1>
             </div>
-            <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
+            <div className="hidden md:ml-6 md:flex md:space-x-8">
               <Link
                 to="/"
                 className={`${location.pathname === '/' ? 'border-blue-500' : 'border-transparent hover:border-gray-300'} 
@@ -44,7 +49,24 @@ const Navigation: React.FC = () => {
               </Link>
             </div>
           </div>
-          <div className="flex items-center">
+          
+          {/* Mobile menu button */}
+          <div className="flex items-center md:hidden">
+            <button
+              onClick={toggleMenu}
+              className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
+              aria-expanded="false"
+            >
+              <span className="sr-only">Ouvrir le menu principal</span>
+              {isMenuOpen ? (
+                <XMarkIcon className="block h-6 w-6" aria-hidden="true" />
+              ) : (
+                <Bars3Icon className="block h-6 w-6" aria-hidden="true" />
+              )}
+            </button>
+          </div>
+          
+          <div className="hidden md:flex md:items-center">
             <Link
               to="/settings"
               className={`${location.pathname === '/settings' ? 'text-blue-600' : 'text-gray-600 hover:text-gray-900'} 
@@ -54,6 +76,55 @@ const Navigation: React.FC = () => {
               Paramètres
             </Link>
           </div>
+        </div>
+      </div>
+      
+      {/* Mobile menu, show/hide based on menu state */}
+      <div className={`${isMenuOpen ? 'block' : 'hidden'} md:hidden`}>
+        <div className="pt-2 pb-3 space-y-1">
+          <Link
+            to="/"
+            className={`${location.pathname === '/' 
+              ? 'bg-blue-50 border-blue-500 text-blue-700' 
+              : 'border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800'} 
+              block pl-3 pr-4 py-2 border-l-4 text-base font-medium`}
+            onClick={() => setIsMenuOpen(false)}
+          >
+            Tableau de bord
+          </Link>
+          <Link
+            to="/pets"
+            className={`${location.pathname === '/pets' || location.pathname.startsWith('/pet/') 
+              ? 'bg-blue-50 border-blue-500 text-blue-700' 
+              : 'border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800'} 
+              block pl-3 pr-4 py-2 border-l-4 text-base font-medium`}
+            onClick={() => setIsMenuOpen(false)}
+          >
+            Animaux
+          </Link>
+          <Link
+            to="/medical"
+            className={`${location.pathname === '/medical' 
+              ? 'bg-blue-50 border-blue-500 text-blue-700' 
+              : 'border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800'} 
+              block pl-3 pr-4 py-2 border-l-4 text-base font-medium`}
+            onClick={() => setIsMenuOpen(false)}
+          >
+            Soins et suivis médicaux
+          </Link>
+          <Link
+            to="/settings"
+            className={`${location.pathname === '/settings' 
+              ? 'bg-blue-50 border-blue-500 text-blue-700' 
+              : 'border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800'} 
+              block pl-3 pr-4 py-2 border-l-4 text-base font-medium`}
+            onClick={() => setIsMenuOpen(false)}
+          >
+            <div className="flex items-center">
+              <Cog6ToothIcon className="h-5 w-5 mr-1" />
+              Paramètres
+            </div>
+          </Link>
         </div>
       </div>
     </nav>

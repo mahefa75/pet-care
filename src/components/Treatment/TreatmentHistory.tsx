@@ -82,13 +82,13 @@ export const TreatmentHistory: React.FC<TreatmentHistoryProps> = ({
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
+    <div className="space-y-3 sm:space-y-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-0">
         <h3 className="text-lg font-semibold text-gray-900">Historique médical</h3>
         {onAddTreatment && (
           <button
             onClick={onAddTreatment}
-            className="px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 
+            className="w-full sm:w-auto px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 
                      transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             Ajouter un traitement
@@ -96,9 +96,9 @@ export const TreatmentHistory: React.FC<TreatmentHistoryProps> = ({
         )}
       </div>
 
-      <div className="grid grid-cols-2 gap-4 mb-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-3 sm:mb-4">
         <select
-          className="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+          className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
           onChange={(e) => setFilters(prev => ({ ...prev, type: e.target.value as TreatmentType || undefined }))}
           value={filters.type || ''}
         >
@@ -110,25 +110,25 @@ export const TreatmentHistory: React.FC<TreatmentHistoryProps> = ({
       </div>
 
       {treatments.length === 0 ? (
-        <p className="text-center text-gray-500 py-8">Aucun traitement enregistré</p>
+        <p className="text-center text-gray-500 py-6 sm:py-8">Aucun traitement enregistré</p>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           {treatments.map((treatment) => (
             <div
               key={treatment.id}
-              className="bg-white rounded-lg shadow p-4 hover:shadow-md transition-shadow"
+              className="bg-white rounded-lg shadow p-3 sm:p-4 hover:shadow-md transition-shadow"
             >
-              <div className="flex items-start gap-3">
-                <span className="text-2xl" role="img" aria-label={treatment.type}>
+              <div className="flex items-start gap-2 sm:gap-3">
+                <span className="text-xl sm:text-2xl" role="img" aria-label={treatment.type}>
                   {getTreatmentIcon(treatment.type)}
                 </span>
                 <div className="flex-1">
-                  <div className="flex justify-between items-start">
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start">
                     <div>
                       <h4 className="font-medium text-gray-900">{treatment.name}</h4>
                       <p className="text-sm text-gray-500">{treatment.type}</p>
                     </div>
-                    <p className="text-sm text-gray-500">{formatDate(treatment.date)}</p>
+                    <p className="text-sm text-gray-500 mt-1 sm:mt-0">{formatDate(treatment.date)}</p>
                   </div>
                   {treatment.nextDueDate && (
                     <p className="mt-2 text-sm text-blue-600">
@@ -145,16 +145,16 @@ export const TreatmentHistory: React.FC<TreatmentHistoryProps> = ({
         </div>
       )}
 
-      <div className="mt-4 flex justify-center space-x-2">
+      <div className="mt-3 sm:mt-4 flex justify-center space-x-2">
         <button
-          className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md disabled:opacity-50"
+          className="px-3 sm:px-4 py-2 bg-gray-100 text-gray-700 rounded-md disabled:opacity-50"
           disabled={filters.page === 1}
           onClick={() => setFilters(prev => ({ ...prev, page: prev.page - 1 }))}
         >
           Précédent
         </button>
         <button
-          className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md disabled:opacity-50"
+          className="px-3 sm:px-4 py-2 bg-gray-100 text-gray-700 rounded-md disabled:opacity-50"
           disabled={treatments.length < filters.limit}
           onClick={() => setFilters(prev => ({ ...prev, page: prev.page + 1 }))}
         >

@@ -53,11 +53,11 @@ export const PetsPage: React.FC = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">Gestion des Animaux</h1>
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 gap-4">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Gestion des Animaux</h1>
         <button
           onClick={handleAddClick}
-          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 
+          className="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 
                    transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           Ajouter un animal

@@ -80,29 +80,29 @@ const MedicalPage: React.FC = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">Soins et suivis médicaux</h1>
-        <div className="flex space-x-4">
+    <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 sm:mb-6 lg:mb-8 gap-3 sm:gap-4">
+        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">Soins et suivis médicaux</h1>
+        <div className="flex flex-col sm:flex-row gap-2 sm:space-x-3 w-full sm:w-auto">
           <button
             onClick={() => setActiveForm('grooming')}
-            className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+            className="rounded-md bg-blue-600 px-3 sm:px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 w-full sm:w-auto"
           >
             Ajouter un toilettage
           </button>
           <button
             onClick={() => setActiveForm('health')}
-            className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+            className="rounded-md bg-blue-600 px-3 sm:px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 w-full sm:w-auto"
           >
             Ajouter un événement santé
           </button>
         </div>
       </div>
       
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 lg:gap-8 mb-3 sm:mb-4 lg:mb-8">
         {/* Section des rendez-vous */}
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <h2 className="text-xl font-semibold mb-4">Rendez-vous à venir</h2>
+        <div className="bg-white rounded-lg shadow-sm p-3 sm:p-4 lg:p-6">
+          <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">Rendez-vous à venir</h2>
           <AppointmentList 
             onUpdate={() => {
               // Ne rien faire ici, le composant gère son propre état
@@ -112,16 +112,16 @@ const MedicalPage: React.FC = () => {
         </div>
 
         {/* Section des toilettages à venir */}
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <h2 className="text-xl font-semibold mb-4">Toilettages à venir</h2>
-          <div className="space-y-4">
+        <div className="bg-white rounded-lg shadow-sm p-3 sm:p-4 lg:p-6">
+          <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">Toilettages à venir</h2>
+          <div className="space-y-3 sm:space-y-4">
             {upcomingGrooming.length === 0 ? (
               <p className="text-gray-500">Aucun toilettage programmé</p>
             ) : (
               upcomingGrooming.map((record) => (
                 <div
                   key={record.id}
-                  className="border-l-4 border-blue-500 pl-4 py-2"
+                  className="border-l-4 border-blue-500 pl-3 sm:pl-4 py-2"
                 >
                   <p className="font-medium">{record.petName} - {record.type}</p>
                   <p className="text-sm text-gray-600">{record.description}</p>
@@ -136,9 +136,9 @@ const MedicalPage: React.FC = () => {
       </div>
 
       {/* Section des événements de santé actifs */}
-      <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
-        <h2 className="text-xl font-semibold mb-4">Événements de santé actifs</h2>
-        <div className="space-y-4">
+      <div className="bg-white rounded-lg shadow-sm p-3 sm:p-4 lg:p-6 mb-3 sm:mb-4 lg:mb-8">
+        <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">Événements de santé actifs</h2>
+        <div className="space-y-3 sm:space-y-4">
           {isLoading ? (
             <div className="flex justify-center items-center py-4">
               <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
@@ -150,7 +150,7 @@ const MedicalPage: React.FC = () => {
             activeHealthEvents.map((event) => (
               <div key={event.id}>
                 <div
-                  className={`border-l-4 pl-4 py-2 ${
+                  className={`border-l-4 pl-3 sm:pl-4 py-2 ${
                     event.severity === 'high'
                       ? 'border-red-500'
                       : event.severity === 'medium'
@@ -158,7 +158,7 @@ const MedicalPage: React.FC = () => {
                       : 'border-green-500'
                   }`}
                 >
-                  <div className="flex justify-between items-start">
+                  <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-3 sm:gap-4">
                     <div>
                       <p className="font-medium">{event.petName} - {event.type}</p>
                       <p className="text-sm text-gray-600">{event.description}</p>
@@ -183,9 +183,9 @@ const MedicalPage: React.FC = () => {
       </div>
 
       {/* Timeline des événements */}
-      <div className="bg-white rounded-lg shadow-sm p-6">
-        <h2 className="text-xl font-semibold mb-4">Historique</h2>
-        <div className="mt-8 px-8">
+      <div className="bg-white rounded-lg shadow-sm p-3 sm:p-4 lg:p-6">
+        <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">Historique</h2>
+        <div className="mt-3 sm:mt-4 lg:mt-8 px-1 sm:px-4 lg:px-8">
           <Timeline key={refreshKey} />
         </div>
       </div>
