@@ -1,0 +1,39 @@
+name: Deploy to prod
+
+on:
+  push:
+    branches:
+      - master  # Déclenche le déploiement sur un push dans la branche master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment: prod
+
+    steps:
+      - name: Checkout du code
+        uses: actions/checkout@v4.2.2
+
+      - name: Installer Node.js
+        uses: actions/setup-node@v4.2.0
+        with:
+          node-version: 18
+          cache: 'npm'
+
+      - name: Installer les dépendances
+        run: npm install
+
+      - name: Build du projet
+        run: npm run build
+
+      - name: Copier .htaccess dans le dossier de build
+        run: cp public/.htaccess dist/
+
+      - name: Déploiement sur le serveur FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: ./dist/  # Répertoire de build
+          server-dir: /  # Répertoire distant
